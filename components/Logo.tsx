@@ -9,7 +9,7 @@ export default function Logo({ className = "h-7 w-auto", fill = "#7B61FF" }) {
         </linearGradient>
       </defs>
       <text x="0" y="34" fontFamily="system-ui, -apple-system, Segoe UI, Roboto" fontWeight="700" fontSize="28" fill="url(#g)">
-        Бъютичь
+        Адепт
       </text>
     </svg>
   );
