@@ -4,7 +4,7 @@ export default function BeforeAfter({
   before = "/demo/before.jpg",
   after = "/demo/after.jpg",
   ratio = 16 / 9,
-  // ✨ новое: подписи для доступности (необязательные)
+  // ✨ новое: подаписи для доступности (необязательные)
   beforeAlt = "Фото лица — До",
   afterAlt = "Фото лица — После",
 }: {
