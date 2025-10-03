@@ -9,6 +9,12 @@ type Props = {
   className?: string;
   /** Стартовая позиция шторки в процентах (0–100), по умолчанию 50 */
   initial?: number;
+  /** Показать метки ДО/ПОСЛЕ */
+  showLabels?: boolean;
+  /** Текст левой метки */
+  labelBefore?: string;
+  /** Текст правой метки */
+  labelAfter?: string;
 };
 
 export default function BeforeAfter({
@@ -18,6 +24,9 @@ export default function BeforeAfter({
   afterAlt = "After",
   className = "",
   initial = 50,
+  showLabels = true,
+  labelBefore = "До",
+  labelAfter = "После",
 }: Props) {
   const [pos, setPos] = useState(
     Number.isFinite(initial) ? Math.min(100, Math.max(0, initial)) : 50
@@ -52,9 +61,17 @@ export default function BeforeAfter({
     <div
       ref={wrapRef}
       className={`relative w-full aspect-[3/4] overflow-hidden rounded-xl border border-gray-200 ${className}`}
-      onMouseDown={(e) => { dragging.current = true; move(e.clientX); }}
-      onMouseMove={(e) => { if (dragging.current) move(e.clientX); }}
-      onTouchStart={(e) => { dragging.current = true; move(e.touches[0].clientX); }}
+      onMouseDown={(e) => {
+        dragging.current = true;
+        move(e.clientX);
+      }}
+      onMouseMove={(e) => {
+        if (dragging.current) move(e.clientX);
+      }}
+      onTouchStart={(e) => {
+        dragging.current = true;
+        move(e.touches[0].clientX);
+      }}
       onTouchMove={(e) => move(e.touches[0].clientX)}
       role="slider"
       aria-label="Сравнение до и после"
@@ -79,10 +96,20 @@ export default function BeforeAfter({
         src={before}
         alt={beforeAlt}
         className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
-        style={{
-          clipPath: `inset(0 ${100 - pos}% 0 0)`,
-        }}
+        style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
       />
+
+      {/* Метки ДО/ПОСЛЕ */}
+      {showLabels && (
+        <>
+          <div className="absolute top-2 left-2 z-20 bg-black/55 text-white text-xs px-2 py-1 rounded-md backdrop-blur-[1px]">
+            {labelBefore}
+          </div>
+          <div className="absolute top-2 right-2 z-20 bg-black/55 text-white text-xs px-2 py-1 rounded-md backdrop-blur-[1px]">
+            {labelAfter}
+          </div>
+        </>
+      )}
 
       {/* Делитель/ползунок */}
       <div className="absolute top-0 bottom-0" style={{ left: `calc(${pos}% - 1px)` }}>

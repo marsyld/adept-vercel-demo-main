@@ -77,12 +77,15 @@ export default function Home() {
 
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/upload"
-              prefetch
-              className="inline-flex items-center px-5 py-3 rounded-xl bg-brand-primary text-white font-medium hover:opacity-90 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary"
-            >
-              Попробовать демо
-            </Link>
+  href="/upload"
+  prefetch
+  className="inline-flex items-center px-5 py-3 rounded-xl bg-brand-primary text-white font-medium opacity-50 cursor-not-allowed"
+  aria-disabled="true"
+  onClick={(e) => e.preventDefault()}
+>
+  Попробовать демо <span className="ml-1 text-sm text-gray-200">(скоро)</span>
+</Link>
+
             <Link
               href="/onboarding/q/1"
               prefetch
