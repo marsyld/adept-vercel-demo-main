@@ -1,5 +1,5 @@
 // components/BeforeAfter.tsx
-import { useState, useRef, useEffect, useCallback, CSSProperties } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 type Props = {
   before: string;
@@ -7,9 +7,6 @@ type Props = {
   beforeAlt?: string;
   afterAlt?: string;
   className?: string;
-  noUpscale?: boolean;
-  /** Соотношение сторон (ширина/высота). Например: 16/9 или 4/3 */
-  ratio?: number;
 };
 
 export default function BeforeAfter({
@@ -18,8 +15,6 @@ export default function BeforeAfter({
   beforeAlt = "Before",
   afterAlt = "After",
   className = "",
-  noUpscale = true,
-  ratio,
 }: Props) {
   const [pos, setPos] = useState(50); // %
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -29,47 +24,43 @@ export default function BeforeAfter({
     setPos(50);
   }, [before, after]);
 
-  const onStart = useCallback(() => { isDraggingRef.current = true; }, []);
-  const onEnd = useCallback(() => { isDraggingRef.current = false; }, []);
-  const onMove = useCallback((clientX: number) => {
+  const startDrag = () => (isDraggingRef.current = true);
+  const stopDrag = () => (isDraggingRef.current = false);
+
+  const move = useCallback((clientX: number) => {
     const el = wrapRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
-    const percent = (x / rect.width) * 100;
-    setPos(percent);
+    setPos((x / rect.width) * 100);
   }, []);
 
-  const onMouseDown = (e: React.MouseEvent) => { onStart(); onMove(e.clientX); };
-  const onMouseMove = (e: React.MouseEvent) => { if (isDraggingRef.current) onMove(e.clientX); };
-  const onTouchStart = (e: React.TouchEvent) => { onStart(); onMove(e.touches[0].clientX); };
-  const onTouchMove = (e: React.TouchEvent) => { onMove(e.touches[0].clientX); };
-
   useEffect(() => {
-    const up = () => onEnd();
-    window.addEventListener("mouseup", up);
-    window.addEventListener("touchend", up);
+    const end = () => stopDrag();
+    window.addEventListener("mouseup", end);
+    window.addEventListener("touchend", end);
     return () => {
-      window.removeEventListener("mouseup", up);
-      window.removeEventListener("touchend", up);
+      window.removeEventListener("mouseup", end);
+      window.removeEventListener("touchend", end);
     };
-  }, [onEnd]);
-
-  const imgBase =
-    "select-none pointer-events-none block " +
-    (noUpscale ? "max-w-full h-auto w-auto" : "w-full h-auto");
-
-  const wrapperStyle: CSSProperties = ratio ? { aspectRatio: `${ratio}` } : {};
+  }, []);
 
   return (
     <div
       ref={wrapRef}
-      className={`relative overflow-hidden rounded-xl border border-gray-200 w-full ${className}`}
-      style={wrapperStyle}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
+      className={`relative w-full aspect-[3/4] overflow-hidden rounded-xl border border-gray-200 ${className}`}
+      onMouseDown={(e) => {
+        startDrag();
+        move(e.clientX);
+      }}
+      onMouseMove={(e) => {
+        if (isDraggingRef.current) move(e.clientX);
+      }}
+      onTouchStart={(e) => {
+        startDrag();
+        move(e.touches[0].clientX);
+      }}
+      onTouchMove={(e) => move(e.touches[0].clientX)}
       role="slider"
       aria-valuemin={0}
       aria-valuemax={100}
@@ -82,20 +73,29 @@ export default function BeforeAfter({
       }}
     >
       {/* AFTER (фон) */}
-      <div className="w-full h-full flex justify-center items-center bg-white">
-        <img src={after} alt={afterAlt} className={imgBase} />
-      </div>
+      <img
+        src={after}
+        alt={afterAlt}
+        className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+      />
 
       {/* BEFORE (маска) */}
       <div
-        className="absolute inset-0 pointer-events-none flex justify-center items-center"
-        style={{ width: `${pos}%`, overflow: "hidden" }}
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        style={{ width: `${pos}%` }}
       >
-        <img src={before} alt={beforeAlt} className={imgBase} />
+        <img
+          src={before}
+          alt={beforeAlt}
+          className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+        />
       </div>
 
       {/* Ползунок */}
-      <div className="absolute top-0 bottom-0" style={{ left: `calc(${pos}% - 1px)` }}>
+      <div
+        className="absolute top-0 bottom-0"
+        style={{ left: `calc(${pos}% - 1px)` }}
+      >
         <div className="w-0.5 h-full bg-white/80 shadow-[0_0_0_1px_rgba(0,0,0,0.06)]" />
         <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2">
           <div className="h-8 w-8 rounded-full bg-white shadow border border-gray-200" />
