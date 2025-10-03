@@ -117,7 +117,7 @@ export default function Home() {
               />
             </div>
 
-            {/* Блок: Мужчины */}
+            {/* Блок: Мужчины 2 */}
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-base font-medium text-gray-800">Мужчины</h3>
