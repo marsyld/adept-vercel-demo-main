@@ -1,38 +1,28 @@
+// components/Footer.tsx
 import Link from "next/link";
-import Logo from "./Logo";
 
 export default function Footer() {
-  const year = new Date().getFullYear();
   return (
-    <footer className="mt-16 border-t border-gray-200">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 grid gap-8 md:grid-cols-3">
-        <div className="flex items-center gap-3">
-          <Logo className="h-7 w-auto" />
+    <footer className="mt-16 border-t border-gray-100 bg-white">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="text-sm text-gray-500">
+          © {new Date().getFullYear()} Адепт. Все права защищены.
         </div>
 
-        <div className="text-sm">
-          <div className="font-semibold mb-3">Компания</div>
-          <ul className="space-y-2">
-            <li><Link href="/" className="hover:text-brand-primary">О проекте</Link></li>
-            <li><Link href="/contacts" className="hover:text-brand-primary">Контакты</Link></li>
-            <li><Link href="/careers" className="hover:text-brand-primary">Карьера</Link></li>
-          </ul>
-        </div>
-
-        <div className="text-sm">
-          <div className="font-semibold mb-3">Документы</div>
-          <ul className="space-y-2">
-            <li><Link href="/privacy" className="hover:text-brand-primary">Политика конфиденциальности</Link></li>
-            <li><Link href="/terms" className="hover:text-brand-primary">Пользовательское соглашение</Link></li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="border-t border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 text-xs text-gray-500 flex items-center justify-between">
-          <span>© {year} Бъютичь</span>
-          <span>Сделано с заботой об интерфейсе</span>
-        </div>
+        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <Link href="/about" className="hover:text-brand-primary">
+            О проекте
+          </Link>
+          <Link href="/contacts" className="hover:text-brand-primary">
+            Контакты
+          </Link>
+          <Link href="/upload" className="hover:text-brand-primary">
+            Загрузка
+          </Link>
+          <Link href="/history" className="hover:text-brand-primary">
+            История
+          </Link>
+        </nav>
       </div>
     </footer>
   );
