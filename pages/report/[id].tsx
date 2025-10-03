@@ -44,7 +44,7 @@ export default function Report() {
         </a>
       </header>
 
-      <BeforeAfter before={before} after={after} ratio={16 / 9} />
+    <BeforeAfter before={before} after={after} />
       <p className="mt-3 text-sm text-slate-600">Слева «До», справа «После». Потяните ползунок.</p>
     </main>
   );
