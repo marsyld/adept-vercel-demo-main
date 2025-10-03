@@ -1,112 +1,120 @@
-import { useEffect, useRef, useState } from "react";
+// components/BeforeAfter.tsx
+import { useState, useRef, useEffect, useCallback } from "react";
 
-export default function BeforeAfter({
-  before = "/demo/before.jpg",
-  after = "/demo/after.jpg",
-  ratio = 16 / 9,
-  // ✨ новое: подаписи для доступности (необязательные)
-  beforeAlt = "Фото лица — До",
-  afterAlt = "Фото лица — После",
-}: {
-  before?: string;
-  after?: string;
-  ratio?: number;
+type Props = {
+  before: string;
+  after: string;
   beforeAlt?: string;
   afterAlt?: string;
-}) {
-  const [pos, setPos] = useState(50);
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const dragging = useRef(false);
+  className?: string;
+  // если true — не растягиваем изображения больше их натурального размера
+  noUpscale?: boolean;
+};
 
+export default function BeforeAfter({
+  before,
+  after,
+  beforeAlt = "Before",
+  afterAlt = "After",
+  className = "",
+  noUpscale = true,
+}: Props) {
+  const [pos, setPos] = useState(50); // %
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingRef = useRef(false);
+
+  // если меняются пути файлов — сбрасываем позицию и «перерисовываем»
   useEffect(() => {
+    setPos(50);
+  }, [before, after]);
+
+  const onStart = useCallback(() => {
+    isDraggingRef.current = true;
+  }, []);
+  const onEnd = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
+  const onMove = useCallback((clientX: number) => {
     const el = wrapRef.current;
     if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+    const percent = (x / rect.width) * 100;
+    setPos(percent);
+  }, []);
 
-    const pct = (x: number) => {
-      const r = el.getBoundingClientRect();
-      const clamped = Math.min(Math.max(x - r.left, 0), r.width);
-      return (clamped / r.width) * 100;
-    };
+  const onMouseDown = (e: React.MouseEvent) => {
+    onStart();
+    onMove(e.clientX);
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (isDraggingRef.current) onMove(e.clientX);
+  };
+  const onTouchStart = (e: React.TouchEvent) => {
+    onStart();
+    onMove(e.touches[0].clientX);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    onMove(e.touches[0].clientX);
+  };
 
-    const down = (e: MouseEvent | TouchEvent) => {
-      dragging.current = true;
-      const x =
-        e instanceof TouchEvent ? e.touches[0].clientX : (e as MouseEvent).clientX;
-      setPos(pct(x));
-    };
-    const move = (e: MouseEvent | TouchEvent) => {
-      if (!dragging.current) return;
-      const x =
-        e instanceof TouchEvent ? e.touches[0].clientX : (e as MouseEvent).clientX;
-      setPos(pct(x));
-    };
-    const up = () => (dragging.current = false);
-
-    el.addEventListener("mousedown", down);
-    el.addEventListener("mousemove", move);
+  useEffect(() => {
+    const up = () => onEnd();
     window.addEventListener("mouseup", up);
-    el.addEventListener("touchstart", down, { passive: true });
-    el.addEventListener("touchmove", move, { passive: true });
     window.addEventListener("touchend", up);
-
     return () => {
-      el.removeEventListener("mousedown", down);
-      el.removeEventListener("mousemove", move);
       window.removeEventListener("mouseup", up);
-      el.removeEventListener("touchstart", down);
-      el.removeEventListener("touchmove", move);
       window.removeEventListener("touchend", up);
     };
-  }, []);
+  }, [onEnd]);
+
+  // классы, чтобы НЕ увеличивать картинки сверх их натурального размера
+  const imgBase =
+    "select-none pointer-events-none block " +
+    (noUpscale ? "max-w-full h-auto w-auto" : "w-full h-auto");
 
   return (
     <div
       ref={wrapRef}
-      className="relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-100"
-      style={{ paddingTop: `${(1 / ratio) * 100}%` }}
-      aria-label="Слайдер сравнения до/после"
-      role="region"
+      className={`relative overflow-hidden rounded-xl border border-gray-200 ${className}`}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      role="slider"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(pos)}
+      aria-label="Сравнение до и после"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowLeft") setPos((p) => Math.max(0, p - 2));
+        if (e.key === "ArrowRight") setPos((p) => Math.min(100, p + 2));
+      }}
     >
-      {/* было alt="До" → теперь берём из пропсов */}
-      <img
-        src={before}
-        alt={beforeAlt}
-        className="absolute inset-0 h-full w-full select-none object-cover pointer-events-none"
-      />
-
-      <div className="absolute inset-0 overflow-hidden" style={{ width: `${pos}%` }}>
-        {/* было alt="После" → теперь берём из пропсов */}
-        <img
-          src={after}
-          alt={afterAlt}
-          className="absolute inset-0 h-full w-full select-none object-cover pointer-events-none"
-        />
+      {/* Контейнер изображений без апскейла; выравниваем по центру */}
+      <div className="w-full flex justify-center items-center bg-white">
+        <img src={after} alt={afterAlt} className={imgBase} />
       </div>
 
-      {/* линия */}
+      {/* Маска для before */}
       <div
-        className="absolute top-0 bottom-0 bg-white shadow-[0_0_0_1px_rgba(15,23,42,.1)]"
-        style={{ left: `calc(${pos}% - 1px)`, width: 2 }}
-      />
+        className="absolute inset-0 pointer-events-none flex justify-center items-center"
+        style={{ width: `${pos}%`, overflow: "hidden" }}
+      >
+        <img src={before} alt={beforeAlt} className={imgBase} />
+      </div>
 
-      {/* range */}
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={pos}
-        onChange={(e) => setPos(parseFloat(e.currentTarget.value))}
-        className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[70%]"
-        aria-label="Положение шторки"
-      />
-
-      {/* метки */}
-      <span className="absolute left-3 top-3 rounded-lg bg-black/60 px-2 py-1 text-xs text-white">
-        До
-      </span>
-      <span className="absolute right-3 top-3 rounded-lg bg-black/60 px-2 py-1 text-xs text-white">
-        После
-      </span>
+      {/* Ползунок */}
+      <div
+        className="absolute top-0 bottom-0"
+        style={{ left: `calc(${pos}% - 1px)` }}
+      >
+        <div className="w-0.5 h-full bg-white/80 shadow-[0_0_0_1px_rgba(0,0,0,0.06)]" />
+        <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2">
+          <div className="h-8 w-8 rounded-full bg-white shadow border border-gray-200" />
+        </div>
+      </div>
     </div>
   );
 }
