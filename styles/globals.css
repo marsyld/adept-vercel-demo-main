@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Гладкая типографика и фон */
+html, body, #__next { height: 100%; }
+body { @apply bg-gray-50 text-gray-900; }
+a { @apply text-brand-primary hover:opacity-80; }
+
+/* Тонкая кастомизация range (ползунок шторки) */
+input[type="range"] { @apply accent-brand-primary; }
