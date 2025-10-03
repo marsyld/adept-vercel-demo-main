@@ -55,8 +55,8 @@ export default function Home() {
               </div>
               <BeforeAfter
                 // заменишь на свои файлы, когда добавишь женские фото
-                before="/demo/before.jpg"
-                after="/demo/after.jpg"
+                before="/demo/before-women.jpg"
+                after="/demo/after-women.jpg"
                 beforeAlt="Женский портрет — До"
                 afterAlt="Женский портрет — После"
               />
@@ -70,8 +70,8 @@ export default function Home() {
               </div>
               <BeforeAfter
                 // пока используем те же файлы, чтобы не было 404
-                before="/demo/before.jpg"
-                after="/demo/after.jpg"
+                before="/demo/before-man.jpg"
+                after="/demo/after-man.jpg"
                 beforeAlt="Мужской портрет — До"
                 afterAlt="Мужской портрет — После"
               />
