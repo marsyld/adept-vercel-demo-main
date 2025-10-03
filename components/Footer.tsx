@@ -13,7 +13,7 @@ export default function Footer() {
           <Link href="/about" className="hover:text-brand-primary">
             О проекте
           </Link>
-          <Link href="/conacts" className="hover:text-brand-primary">
+          <Link href="/contacts" className="hover:text-brand-primary">
             Контакты
           </Link>
           <Link href="/upload" className="hover:text-brand-primary">
