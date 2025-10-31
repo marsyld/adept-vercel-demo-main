@@ -2,18 +2,21 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 type Analysis = {
   avgBrightness: number;   // 0..255
   contrast: number;        // stddev 0..128+
   rednessIndex: number;    // 0..2 (условно)
-  sharpness: number;       // относительная резкость (0..N)
+  sharpness: number;       // относительная резкость
   notes: string[];
   summary: string;
+  // Новое:
+  skinToneHex: string;     // средний цвет кожи
+  skinToneName: string;    // словесное описание
 };
 
 export default function UploadPage() {
-  const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -21,16 +24,14 @@ export default function UploadPage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const reset = () => {
-    setFile(null);
     setPreview(null);
     setAnalysis(null);
-    inputRef.current?.value && (inputRef.current.value = "");
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   const onSelect = useCallback((f?: File) => {
     if (!f) return;
     if (!f.type.startsWith("image/")) return alert("Загрузите изображение");
-    setFile(f);
     const url = URL.createObjectURL(f);
     setPreview(url);
     setAnalysis(null);
@@ -70,9 +71,9 @@ export default function UploadPage() {
   const tips = useMemo(() => {
     if (!analysis) return [];
     const arr: string[] = [];
-    if (analysis.avgBrightness < 90) arr.push("Снимок тёмный — попробуйте более яркое освещение спереди.");
+    if (analysis.avgBrightness < 90) arr.push("Снимок тёмный — попробуйте более яркое фронтальное освещение.");
     if (analysis.avgBrightness > 200) arr.push("Снимок пересвечен — уменьшите яркость света.");
-    if (analysis.sharpness < 8) arr.push("Возможно, картинка слегка размыта — попросим держать камеру устойчиво.");
+    if (analysis.sharpness < 8) arr.push("Снимок слегка размытый — удерживайте камеру устойчивее.");
     return arr;
   }, [analysis]);
 
@@ -93,7 +94,6 @@ export default function UploadPage() {
           Загрузите портрет (анфас). Анализ выполняется в браузере, без отправки на сервер. Результат сохраняется только на время сессии.
         </p>
 
-        {/* Dropzone */}
         {!preview ? (
           <label
             {...dropHandlers}
@@ -161,6 +161,21 @@ export default function UploadPage() {
                     <Metric label="Контраст" value={analysis.contrast.toFixed(1)} />
                     <Metric label="Краснота (индекс)" value={analysis.rednessIndex.toFixed(2)} />
                     <Metric label="Резкость (отн.)" value={analysis.sharpness.toFixed(1)} />
+                    {/* Новый блок: тон кожи */}
+                    <Metric
+                      label="Тон кожи"
+                      value={
+                        <span className="inline-flex items-center gap-2">
+                          <span
+                            className="w-5 h-5 rounded-full border border-gray-300"
+                            style={{ background: analysis.skinToneHex }}
+                            aria-label={analysis.skinToneHex}
+                            title={analysis.skinToneHex}
+                          />
+                          {analysis.skinToneName}
+                        </span>
+                      }
+                    />
                   </div>
 
                   <div className="rounded-xl bg-gray-50 p-3 text-sm">
@@ -168,11 +183,11 @@ export default function UploadPage() {
                     <p className="text-gray-700">{analysis.summary}</p>
                   </div>
 
-                  {analysis.notes.length > 0 && (
+                  {(analysis.notes.length > 0 || tips.length > 0) && (
                     <div className="rounded-xl bg-gray-50 p-3 text-sm">
                       <div className="font-medium mb-1">Рекомендации по снимку:</div>
                       <ul className="list-disc list-inside text-gray-700 space-y-1">
-                        {analysis.notes.map((n, i) => <li key={i}>{n}</li>)}
+                        {[...analysis.notes, ...tips].map((n, i) => <li key={i}>{n}</li>)}
                       </ul>
                     </div>
                   )}
@@ -186,8 +201,8 @@ export default function UploadPage() {
   );
 }
 
-/** Плашка метрики */
-function Metric({ label, value }: { label: string; value: string }) {
+/** Плашка метрики: теперь принимает не только строки, но и ReactNode */
+function Metric({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-lg border border-gray-200 p-2">
       <div className="text-gray-500">{label}</div>
@@ -196,20 +211,13 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-/**
- * Анализ изображения целиком в браузере.
- * Простейшие метрики:
- * - средняя яркость (по Y=luma),
- * - "контраст" как stddev по Y,
- * - индекс красноты (R / (G+B)),
- * - "резкость" как дисперсия лапласиана (оценка).
- */
+/** Главная функция анализа: считает базовые метрики + средний тон кожи */
 async function analyzeImageInBrowser(img: HTMLImageElement): Promise<Analysis> {
   // Рисуем уменьшенную копию (быстрее считать)
   const MAX_W = 600;
-  const ratio = img.naturalWidth / img.naturalHeight;
-  const w = Math.min(MAX_W, img.naturalWidth);
-  const h = Math.round(w / ratio);
+  const ratio = img.naturalWidth / img.naturalHeight || 1;
+  const w = Math.min(MAX_W, img.naturalWidth || MAX_W);
+  const h = Math.max(1, Math.round(w / ratio));
 
   const canvas = document.createElement("canvas");
   canvas.width = w;
@@ -219,40 +227,39 @@ async function analyzeImageInBrowser(img: HTMLImageElement): Promise<Analysis> {
 
   const { data } = ctx.getImageData(0, 0, w, h);
   const n = w * h;
-  let sumY = 0, sumY2 = 0, sumR = 0, sumG = 0, sumB = 0;
+  let sumR = 0, sumG = 0, sumB = 0;
+  let sumY = 0, sumY2 = 0;
 
-  // Быстрый проход по пикселям
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i], g = data[i + 1], b = data[i + 2];
-    // Luma по Rec.601 (приближённо)
-    const y = 0.299 * r + 0.587 * g + 0.114 * b;
-    sumY += y;
-    sumY2 += y * y;
     sumR += r; sumG += g; sumB += b;
+    const y = 0.299 * r + 0.587 * g + 0.114 * b; // luma
+    sumY += y; sumY2 += y * y;
   }
 
+  const avgR = sumR / n;
+  const avgG = sumG / n;
+  const avgB = sumB / n;
   const avgY = sumY / n;
-  const variance = sumY2 / n - avgY * avgY;
-  const stddev = Math.sqrt(Math.max(variance, 0));
-
-  // Индекс "красноты": чем выше R относительно G+B, тем больше.
-  // Добавляем маленький эпсилон, чтобы не делить на 0.
-  const redness = (sumR / n) / ((sumG / n + sumB / n) + 1e-6);
-
-  // Оценка резкости: дисперсия лапласиана
+  const variance = Math.max(sumY2 / n - avgY * avgY, 0);
+  const stddev = Math.sqrt(variance);
+  const redness = (avgR) / ((avgG + avgB) + 1e-6);
   const sharpness = estimateSharpness(ctx, w, h);
 
-  // Простейшая логика интерпретации
+  const skinToneHex = rgbToHex(avgR, avgG, avgB);
+  const skinToneName = classifySkinTone(avgR, avgG, avgB);
+
+  // Простейшее резюме
   const notes: string[] = [];
   if (avgY < 100) notes.push("Низкая яркость — добавьте мягкий фронтальный свет.");
   if (avgY > 200) notes.push("Очень ярко — возможна пересветка деталей.");
-  if (stddev < 40) notes.push("Низкий контраст — возможна плоская картинка.");
-  if (sharpness < 8) notes.push("Низкая резкость — попробуйте перефокусироваться или удерживать камеру устойчивее.");
-  if (redness > 1.15) notes.push("Замечена лёгкая выраженность красных оттенков (покраснение).");
+  if (stddev < 35) notes.push("Низкий контраст — картинка может казаться «плоской».");
+  if (sharpness < 8) notes.push("Низкая резкость — попробуйте перефокусироваться или держать камеру устойчивее.");
+  if (redness > 1.15) notes.push("Лёгкая выраженность красных оттенков (покраснение).");
 
   let summary = "Кожа выглядит нейтрально, значимых артефактов не обнаружено.";
-  if (redness > 1.2) summary = "Замечена выраженная краснота — возможно, чувствительность или локальные воспаления.";
-  else if (redness > 1.05) summary = "Лёгкая покрасненность; можно рекомендовать успокаивающие средства.";
+  if (redness > 1.2) summary = "Отмечается выраженная краснота — возможно, чувствительность или локальные воспаления.";
+  else if (redness > 1.05) summary = "Лёгкая покрасненность; подойдут успокаивающие средства.";
   if (stddev < 35) summary += " Контраст невысокий — освещение мягкое.";
   if (stddev > 60) summary += " Контраст высокий — возможно, жёсткий свет.";
   if (sharpness < 8) summary += " Снимок слегка размытый.";
@@ -264,26 +271,24 @@ async function analyzeImageInBrowser(img: HTMLImageElement): Promise<Analysis> {
     sharpness,
     notes,
     summary,
+    skinToneHex,
+    skinToneName,
   };
 }
 
-/** очень простая оценка резкости по дисперсии лапласиана */
+/** простая оценка резкости по дисперсии лапласиана */
 function estimateSharpness(ctx: CanvasRenderingContext2D, w: number, h: number): number {
   const src = ctx.getImageData(0, 0, w, h);
   const g = new Float32Array(w * h);
 
-  // Грейскейл
+  // в градации серого
   for (let i = 0, p = 0; i < src.data.length; i += 4, p++) {
     const r = src.data[i], gg = src.data[i + 1], b = src.data[i + 2];
     g[p] = 0.299 * r + 0.587 * gg + 0.114 * b;
   }
 
   // Лапласиан 3x3
-  const k = [
-    0,  1, 0,
-    1, -4, 1,
-    0,  1, 0,
-  ];
+  const k = [0, 1, 0, 1, -4, 1, 0, 1, 0];
   const out = new Float32Array(w * h);
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
@@ -298,14 +303,27 @@ function estimateSharpness(ctx: CanvasRenderingContext2D, w: number, h: number):
   }
 
   // дисперсия
-  let sum = 0, sum2 = 0, count = 0;
+  let sum = 0, sum2 = 0, count = out.length;
   for (let i = 0; i < out.length; i++) {
     const v = out[i];
-    sum += v;
-    sum2 += v * v;
-    count++;
+    sum += v; sum2 += v * v;
   }
   const mean = sum / count;
-  const variance = sum2 / count - mean * mean;
-  return Math.max(variance, 0) ** 0.5 / 10; // нормируем «для красоты»
+  const variance = Math.max(sum2 / count - mean * mean, 0);
+  return Math.sqrt(variance) / 10; // нормировка «для красоты»
+}
+
+/** утилиты для тона кожи */
+function rgbToHex(r: number, g: number, b: number) {
+  const toHex = (x: number) => Math.round(x).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function classifySkinTone(r: number, g: number, b: number) {
+  // простая эмпирическая шкала (MVP)
+  if (r > 210 && g > 190 && b > 170) return "Fair (очень светлый)";
+  if (r > 180 && g > 150 && b > 130) return "Light (светлый)";
+  if (r > 150 && g > 120 && b > 100) return "Medium (средний)";
+  if (r > 120 && g > 90 && b > 70)   return "Tan (смуглый)";
+  return "Deep (тёмный)";
 }
