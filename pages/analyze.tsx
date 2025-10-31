@@ -5,6 +5,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { motion } from "framer-motion";
 
 export default function AnalyzePage() {
   const title = "Adept — Анализ лица с ИИ";
@@ -15,52 +16,116 @@ export default function AnalyzePage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const toBase64 = (file: File) =>
+  // ===== helpers =====
+  const toBase64 = (f: File) =>
     new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(f);
       reader.onload = () => resolve((reader.result as string).split(",")[1]);
       reader.onerror = reject;
     });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // skinstatus — коэффициенты: чем больше, тем хуже.
+  // Нормализуем к 0–100% (5 — условный "плохой" максимум).
+  const normalizeValue = (val?: number) => {
+    if (val === undefined || val === null || Number.isNaN(val)) return 0;
+    const p = Math.min(Math.max((val / 5) * 100, 0), 100);
+    return p;
+  };
+
+  const badgeFor = (percent: number) => {
+    if (percent < 35) return { text: "хорошо", cls: "text-green-600 bg-green-50" };
+    if (percent < 70) return { text: "средне", cls: "text-yellow-700 bg-yellow-50" };
+    return { text: "нужно внимание", cls: "text-red-700 bg-red-50" };
+    // интерпретация: больше % — выраженнее проблема
+  };
+
+  const barColor = (percent: number) => {
+    if (percent < 35) return "bg-green-500";
+    if (percent < 70) return "bg-yellow-400";
+    return "bg-red-500";
+  };
+
+  const renderBar = (label: string, val?: number) => {
+    const percent = normalizeValue(val);
+    const color = barColor(percent);
+    const b = badgeFor(percent);
+
+    return (
+      <div key={label} className="mb-4">
+        <div className="flex items-center justify-between text-sm text-gray-700 mb-1">
+          <span className="flex items-center gap-2">
+            {label}
+            <span className={`px-2 py-0.5 rounded-md text-xs ${b.cls}`}>{b.text}</span>
+          </span>
+          <span>{percent.toFixed(0)}%</span>
+        </div>
+        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+          <motion.div
+            className={`h-2 ${color}`}
+            initial={{ width: 0 }}
+            animate={{ width: `${percent}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  // ===== events =====
+  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     setFile(f);
     setPreview(URL.createObjectURL(f));
-  };
-
-  const handleAnalyze = async () => {
-    if (!file) return;
-    setLoading(true);
     setResult(null);
-
-    const base64 = await toBase64(file);
-    const res = await fetch("/api/analyze-face", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageBase64: base64 }),
-    });
-    const data = await res.json();
-    setResult(data);
-    setLoading(false);
+    setError(null);
   };
 
-  const renderBar = (label: string, value: number) => (
-    <div key={label} className="mb-3">
-      <div className="flex justify-between text-sm text-gray-700 mb-1">
-        <span>{label}</span>
-        <span>{(value * 100).toFixed(0)}%</span>
-      </div>
-      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-        <div
-          className="h-2 bg-brand-primary transition-all duration-500"
-          style={{ width: `${value * 100}%` }}
-        ></div>
-      </div>
-    </div>
-  );
+  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const f = e.dataTransfer.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+    setResult(null);
+    setError(null);
+  };
+
+  const onAnalyze = async () => {
+    if (!file) return;
+    try {
+      setLoading(true);
+      setError(null);
+      setResult(null);
+
+      const base64 = await toBase64(file);
+      const res = await fetch("/api/analyze-face", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64 }),
+      });
+
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || `API error ${res.status}`);
+      }
+
+      const data = await res.json();
+      setResult(data);
+    } catch (e: any) {
+      setError(e?.message || "Ошибка анализа. Попробуйте другое фото.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== derived =====
+  const face = result?.faces?.[0];
+  const attrs = face?.attributes;
+  const skin = attrs?.skinstatus;
 
   return (
     <>
@@ -72,15 +137,32 @@ export default function AnalyzePage() {
       <Header />
 
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-12 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{title}</h1>
-        <p className="text-gray-600 mb-10">
+        <motion.h1
+          className="text-3xl md:text-4xl font-bold mb-4"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          {title}
+        </motion.h1>
+        <motion.p
+          className="text-gray-600 mb-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.35 }}
+        >
           Загрузите фото — получите анализ по возрасту, эмоциям и состоянию кожи.
-        </p>
+        </motion.p>
 
-        {/* Загрузка */}
-        <div
+        {/* Upload */}
+        <motion.div
           className="border-2 border-dashed border-gray-300 rounded-2xl p-8 mb-6 transition hover:border-brand-primary hover:bg-gray-50 cursor-pointer"
           onClick={() => document.getElementById("fileInput")?.click()}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDrop}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.25 }}
         >
           {preview ? (
             <img
@@ -98,65 +180,86 @@ export default function AnalyzePage() {
             id="fileInput"
             type="file"
             accept="image/*"
-            onChange={handleFileChange}
+            onChange={onPick}
             className="hidden"
           />
+        </motion.div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={onAnalyze}
+            disabled={!file || loading}
+            className="px-6 py-3 bg-brand-primary text-white rounded-xl font-medium hover:opacity-90 disabled:opacity-40 transition"
+          >
+            {loading ? "Анализируем..." : "Анализировать фото"}
+          </button>
+          {file && !loading && (
+            <button
+              onClick={() => {
+                setFile(null);
+                setPreview(null);
+                setResult(null);
+                setError(null);
+              }}
+              className="px-6 py-3 bg-gray-100 text-gray-800 rounded-xl font-medium hover:bg-gray-200 transition"
+            >
+              Сбросить
+            </button>
+          )}
         </div>
 
-        {file && !loading && (
-          <button
-            onClick={handleAnalyze}
-            className="px-6 py-3 bg-brand-primary text-white rounded-xl font-medium hover:opacity-90 transition"
+        {/* Error */}
+        {error && (
+          <p className="mt-4 text-red-600 text-sm">{error}</p>
+        )}
+
+        {/* Results */}
+        {face && (
+          <motion.div
+            className="mt-10 bg-white border border-gray-200 rounded-2xl p-8 shadow-md text-left max-w-md mx-auto"
+            initial={{ opacity: 0, y: 8, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35 }}
           >
-            Анализировать фото
-          </button>
-        )}
-
-        {loading && (
-          <p className="mt-6 text-gray-600 animate-pulse">
-            🔍 Анализируем изображение...
-          </p>
-        )}
-
-        {/* Результаты */}
-        {result && result.faces && result.faces.length > 0 && (
-          <div className="mt-10 bg-white border border-gray-200 rounded-2xl p-8 shadow-md text-left max-w-md mx-auto">
             <h3 className="text-xl font-semibold mb-4 text-center">
               Результаты анализа
             </h3>
 
-            <div className="space-y-2 text-gray-700 mb-4">
-              <p><b>Возраст:</b> {result.faces[0].attributes.age.value}</p>
-              <p><b>Пол:</b> {result.faces[0].attributes.gender.value}</p>
+            <div className="space-y-2 text-gray-700 mb-5">
+              <p><b>Возраст:</b> {attrs?.age?.value ?? "—"}</p>
+              <p><b>Пол:</b> {attrs?.gender?.value ?? "—"}</p>
               <p>
                 <b>Эмоция:</b>{" "}
-                {
-                  Object.entries(result.faces[0].attributes.emotion)
-                    .sort((a: any, b: any) => b[1] - a[1])[0][0]
-                }
+                {attrs?.emotion
+                  ? (Object.entries(attrs.emotion) as [string, number][])
+                      .sort((a, b) => b[1] - a[1])[0][0]
+                  : "—"}
               </p>
               <p>
                 <b>Beauty score (♀):</b>{" "}
-                {result.faces[0].attributes.beauty.female_score.toFixed(1)}
+                {attrs?.beauty?.female_score != null
+                  ? attrs.beauty.female_score.toFixed(1)
+                  : "—"}
               </p>
               <p>
                 <b>Beauty score (♂):</b>{" "}
-                {result.faces[0].attributes.beauty.male_score.toFixed(1)}
+                {attrs?.beauty?.male_score != null
+                  ? attrs.beauty.male_score.toFixed(1)
+                  : "—"}
               </p>
             </div>
 
-            {result.faces[0].attributes.skinstatus && (
+            {skin && (
               <>
-                <h4 className="font-medium mb-3 text-gray-800">
-                  Состояние кожи
-                </h4>
-                {renderBar("Акне", result.faces[0].attributes.skinstatus.acne)}
-                {renderBar("Темные круги", result.faces[0].attributes.skinstatus.dark_circle)}
-                {renderBar("Пятна", result.faces[0].attributes.skinstatus.stain)}
-                {renderBar("Морщины", result.faces[0].attributes.skinstatus.health)}
+                <h4 className="font-medium mb-3 text-gray-800">Состояние кожи</h4>
+                {renderBar("Акне", skin.acne)}
+                {renderBar("Темные круги", skin.dark_circle)}
+                {renderBar("Пятна", skin.stain)}
+                {renderBar("Морщины (общее здоровье кожи)", skin.health)}
               </>
             )}
-          </div>
+          </motion.div>
         )}
 
         <div className="mt-10">
