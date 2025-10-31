@@ -4,7 +4,7 @@ import Link from "next/link";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BeforeAfter from "../components/BeforeAfter";
-import FaceAnalyzer from "@/components/FaceAnalyzer";
+// import FaceAnalyzer from "@/components/FaceAnalyzer"; // уже не нужно на главной
 
 export default function Home() {
   const siteName = "Adept";
@@ -63,17 +63,30 @@ export default function Home() {
 
       {/* Основной контент */}
       <main className="max-w-6xl mx-auto px-4 md:px-6 py-12">
-        <section aria-labelledby="hero-title" className="mb-10 scroll-mt-24">
+        {/* Hero */}
+        <section aria-labelledby="hero-title" className="mb-10 scroll-mt-24 text-center">
           <h1 id="hero-title" className="text-3xl md:text-4xl font-bold mb-3">
             {title}
           </h1>
-          <p className="text-gray-600 mb-6">
-            Загрузите фото, смотрите «До / После» и анализируйте результат с
-            помощью ИИ.
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+            Adept помогает определить состояние кожи, эмоции и возраст с помощью искусственного интеллекта.
           </p>
 
-          {/* Компонент анализа лица */}
-          {/*<FaceAnalyzer />*/}
+          <div className="flex justify-center gap-4">
+            <Link
+              href="/analyze"
+              className="inline-flex items-center px-6 py-3 rounded-xl bg-brand-primary text-white font-medium hover:opacity-90 transition"
+            >
+              Пройти анализ
+            </Link>
+
+            <Link
+              href="#ba-title"
+              className="inline-flex items-center px-6 py-3 rounded-xl border border-gray-300 text-gray-800 hover:bg-gray-50 transition"
+            >
+              Смотреть демо
+            </Link>
+          </div>
         </section>
 
         {/* Блок: Визуализация До / После */}
@@ -83,6 +96,7 @@ export default function Home() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Женщины */}
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-base font-medium text-gray-800">Женщины</h3>
@@ -96,6 +110,7 @@ export default function Home() {
               />
             </div>
 
+            {/* Мужчины */}
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-base font-medium text-gray-800">Мужчины</h3>
@@ -122,12 +137,11 @@ export default function Home() {
       <div className="md:hidden fixed inset-x-0 bottom-0 z-30 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <Link
-  href="/analyze"
-  className="inline-flex items-center px-5 py-3 rounded-xl bg-brand-primary text-white font-medium hover:opacity-90 transition"
->
-  Пройти анализ
-</Link>
-
+            href="/analyze"
+            className="block w-full text-center px-5 py-3 rounded-xl bg-brand-primary text-white font-medium hover:opacity-90 transition"
+          >
+            Пройти анализ
+          </Link>
         </div>
       </div>
 
