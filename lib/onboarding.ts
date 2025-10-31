@@ -1,14 +1,15 @@
 // lib/onboarding.ts
 import { z } from "zod";
-import type { OnboardingData } from "@/types/onboarding";
+
+export const STORAGE_KEY = "onboarding_v1";
 
 export const onboardingSchema = z.object({
   gender: z.enum(["female", "male", "other"]),
   age: z.number().int().min(16).max(80),
   skinType: z.enum(["normal", "dry", "oily", "combination", "sensitive"]),
-  concerns: z.array(z.string()).min(1, "Выберите хотя бы один пункт"),
+  concerns: z.array(z.string()).optional().default([]),
   allergies: z.string().optional().default(""),
-  pregnancy: z.enum(["yes", "no", "na"]),
+  pregnancy: z.enum(["yes", "no", "na"]).optional().default("na"),
   contraindications: z.string().optional().default(""),
   routine: z.array(z.string()).optional().default([]),
   contact: z
@@ -19,8 +20,9 @@ export const onboardingSchema = z.object({
     })
     .optional()
     .default({}),
-}) satisfies z.ZodType<OnboardingData>;
+});
 
 export type OnboardingValidated = z.infer<typeof onboardingSchema>;
 
-export const STORAGE_KEY = "onboarding_v1";
+// (опционально) U/I-тип, если где-то нужен
+export type OnboardingData = Partial<OnboardingValidated>;
