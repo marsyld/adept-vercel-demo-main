@@ -73,7 +73,7 @@ export default function Home() {
           </p>
 
           {/* Компонент анализа лица */}
-          <FaceAnalyzer />
+          {/*<FaceAnalyzer />*/}
         </section>
 
         {/* Блок: Визуализация До / После */}
@@ -122,12 +122,12 @@ export default function Home() {
       <div className="md:hidden fixed inset-x-0 bottom-0 z-30 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <Link
-            href="/upload"
-            prefetch
-            className="block w-full text-center px-5 py-3 rounded-xl bg-brand-primary text-white font-medium hover:opacity-90 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary"
-          >
-            Попробовать демо
-          </Link>
+  href="/analyze"
+  className="inline-flex items-center px-5 py-3 rounded-xl bg-brand-primary text-white font-medium hover:opacity-90 transition"
+>
+  Пройти анализ
+</Link>
+
         </div>
       </div>
 
