@@ -8,8 +8,8 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          primary: "#E1EEC3",     // мягкий светло-зелёный
-          secondary: "#F05053",   // кораллово-розовый
+          primary: "#928DAB",     // мягкий светло-зелёный
+          secondary: "#7303c0",   // кораллово-розовый
         },
       },
     },
