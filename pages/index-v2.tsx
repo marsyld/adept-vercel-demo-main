@@ -12,47 +12,40 @@ export default function HomeV2() {
   const description =
     "Персонализированный анализ лица на базе ИИ: рекомендации по уходу, самопрезентации и улучшению внешнего вида без инвазивных процедур.";
 
-  // Research tabs (как у QOVES: несколько доменов влияния)
+  /* ---------- research tabs ---------- */
   const researchTabs = [
     {
-      key: "confidence",
-      label: "Самооценка",
+      key: "clinical",
+      label: "Клинический уровень анализа",
       text:
-        "Осознание сильных сторон внешности связано с более высокой уверенностью и качеством коммуникации. Adept помогает увидеть это объективно.",
-      img: "/qoves/research-confidence.jpg",
+        "Мы используем сканирование клинического уровня и строим карту из 521 точки лица под разными углами, чтобы получить детальный и точный анализ.",
+      img: "/qoves/research-clinical.jpg",
     },
     {
-      key: "health",
-      label: "Здоровье кожи",
+      key: "personalization",
+      label: "Непревзойдённая персонализация",
       text:
-        "ИИ выявляет морщины, пятна и оттенок кожи, подсказывает уход и режим восстановления — от сна и воды до SPF.",
-      img: "/qoves/research-skin.jpg",
+        "Мы учитываем вашу этничность, возраст, регион, образ жизни и бюджет. Каждый план улучшений — уникален.",
+      img: "/qoves/research-personalization.jpg",
     },
     {
-      key: "first-impression",
-      label: "Первое впечатление",
+      key: "evidence",
+      label: "Доказательный подход",
       text:
-        "Первые секунды взаимодействия формируют отношение. Adept подсказывает детали, влияющие на доверие и воспринимаемую компетентность.",
-      img: "/qoves/research-impression.jpg",
+        "Мы опираемся на измеримые биометрические данные и рецензируемые исследования, а не на субъективные мнения.",
+      img: "/qoves/research-evidence.jpg",
     },
     {
-      key: "career",
-      label: "Карьера",
+      key: "science",
+      label: "Наука о привлекательности лица",
       text:
-        "Аккуратная самопрезентация коррелирует с результатами переговоров и найма. ИИ-подсказки помогают попадать в правильный тон.",
-      img: "/qoves/research-career.jpg",
-    },
-    {
-      key: "relationships",
-      label: "Отношения",
-      text:
-        "Чёткие сигналы открытости и доброжелательности улучшают восприятие в онлайне и офлайне. Adept объясняет, как это транслировать.",
-      img: "/qoves/research-relationship.jpg",
+        "База Diagnosia изучает науку о привлекательности на данных из разных групп и сравнивает ваше лицо с тысячами исследований, чтобы предложить то, что работает именно для вас.",
+      img: "/qoves/research-science.jpg",
     },
   ];
   const [activeTab, setActiveTab] = useState(researchTabs[0].key);
 
-  // FAQ
+  /* ---------- FAQ ---------- */
   const faqs = [
     {
       q: "Нужны ли салонные процедуры?",
@@ -83,20 +76,16 @@ export default function HomeV2() {
       <Header />
 
       <main className="bg-[#111111] text-white">
-        {/* ================= HERO (video bg + BA) ================= */}
+        {/* ---------- HERO ---------- */}
         <section className="relative overflow-hidden">
-          {/* фоновое видео (заглушка) */}
           <div className="absolute inset-0 opacity-30 pointer-events-none">
-            {/* Заменишь img на video, когда будет готов файл:
-              <video autoPlay muted loop playsInline src="/qoves/ai-bg.mp4" className="w-full h-full object-cover" />
-            */}
+            {/* Заменишь на <video autoPlay muted loop playsInline src="/qoves/ai-bg.mp4" className="w-full h-full object-cover" /> */}
             <img
               src="/qoves/ai-bg-placeholder.jpg"
               alt=""
               className="w-full h-full object-cover"
             />
           </div>
-          {/* градиент-тон */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#111111]/80 via-[#111111]/70 to-[#111111]" />
 
           <div className="relative max-w-7xl mx-auto px-6 pt-24 pb-20 md:pt-32 md:pb-28">
@@ -133,7 +122,6 @@ export default function HomeV2() {
               >
                 Зарегистрироваться
               </Link>
-
               <a
                 href="#research"
                 className="px-7 py-3 rounded-xl border border-white/25 hover:bg-white/5 transition"
@@ -142,7 +130,7 @@ export default function HomeV2() {
               </a>
             </motion.div>
 
-            {/* Before / After: 2 колонки (жен/муж), как у QOVES */}
+            {/* Before/After */}
             <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
                 <BeforeAfter
@@ -161,26 +149,10 @@ export default function HomeV2() {
                 />
               </div>
             </div>
-
-            {/* Feature strip — короткие пункты (career/dating/confidence-стиль) */}
-            <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
-              <li className="flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-secondary" />
-                Уверенность и самопрезентация
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-secondary" />
-                Уход за кожей на основе данных
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-secondary" />
-                Профессиональные рекомендации
-              </li>
-            </ul>
           </div>
         </section>
 
-        {/* ================= MEDIA / PRESS ================= */}
+        {/* ---------- PRESS ---------- */}
         <section className="py-14 border-t border-white/10">
           <div className="max-w-6xl mx-auto px-6 text-center">
             <p className="uppercase tracking-widest text-xs text-white/50 mb-6">
@@ -196,8 +168,8 @@ export default function HomeV2() {
           </div>
         </section>
 
-        {/* ================= HOW IT WORKS (3 шага) ================= */}
-        <section className="py-24 bg-[#0f0f0f]">
+        {/* ---------- HOW IT WORKS ---------- */}
+        <section id="how-it-works" className="py-24 bg-[#0f0f0f]">
           <div className="max-w-6xl mx-auto px-6">
             <h2 className="text-3xl md:text-4xl font-bold">Как это работает</h2>
             <div className="mt-10 grid md:grid-cols-3 gap-6">
@@ -223,13 +195,13 @@ export default function HomeV2() {
           </div>
         </section>
 
-        {/* ================= RESEARCH (tabs) ================= */}
+        {/* ---------- RESEARCH ---------- */}
         <section id="research" className="py-24 bg-[#111111]">
           <div className="max-w-6xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold">Почему это важно</h2>
+            <h2 className="text-3xl md:text-4xl font-bold">Почему это работает</h2>
             <p className="mt-4 max-w-2xl text-white/70">
-              Исследования показывают влияние внешности на уверенность, карьеру и отношения.
-              Adept помогает корректно интерпретировать сигналы и мягко усиливать сильные стороны.
+              Мы соединяем нейротехнологии, данные и косметологию, чтобы вы
+              получили точный, объективный и персональный анализ.
             </p>
 
             <div className="mt-10 grid md:grid-cols-4 gap-3">
@@ -258,96 +230,92 @@ export default function HomeV2() {
           </div>
         </section>
 
-        {/* ================= PLANS ================= */}
-        <section className="py-24 bg-[#0f0f0f]">
+        {/* ---------- PLANS ---------- */}
+        <section id="plans" className="py-24 bg-[#0f0f0f]">
           <div className="max-w-6xl mx-auto px-6">
             <h2 className="text-3xl md:text-4xl font-bold">Тарифы</h2>
-            <p className="mt-3 text-white/70 max-w-2xl">
-              Начните бесплатно. Расширенные отчёты и персональные планы доступны в подписке.
-            </p>
+          <p className="mt-3 text-white/70 max-w-2xl">
+            Начните бесплатно. Расширенные отчёты и персональные планы доступны в подписке.
+          </p>
 
-            <div className="mt-10 grid md:grid-cols-3 gap-6">
-  {[
-    {
-      name: "Free",
-      price: "0 ₽",
-      desc: "Базовый анализ, эмоции, возраст, beauty-оценки.",
-      features: ["Загрузка 1 фото", "Эмоции и возраст", "Beauty-оценка"],
-      cta: "Зарегистрироваться",
-      href: "/register",
-      disabled: false,
-    },
-    {
-      name: "Plus",
-      price: "990 ₽",
-      desc: "Расширенный skin-анализ, рекомендации по уходу.",
-      features: ["Skinstatus", "Советы по уходу", "Экспорт отчёта PDF"],
-      cta: "Скоро",
-      href: "#",
-      disabled: true,
-    },
-    {
-      name: "Pro",
-      price: "2 490 ₽",
-      desc: "Полный план самопрезентации + рекомендации по съёмке.",
-      features: [
-        "План самопрезентации",
-        "Подсказки по свету/ракурсу",
-        "Сравнение До/После",
-      ],
-      cta: "Скоро",
-      href: "#",
-      disabled: true,
-    },
-  ].map((p, i) => (
-    <motion.div
-      key={p.name}
-      className={`rounded-2xl p-6 border ${
-        p.disabled
-          ? "border-white/10 bg-white/[0.04] opacity-70"
-          : "border-brand-secondary bg-white/[0.08]"
-      }`}
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4, delay: i * 0.05 }}
-    >
-      <div className="text-sm text-brand-secondary font-semibold">{p.name}</div>
-      <div className="mt-2 text-3xl font-bold">{p.price}</div>
-      <p className="mt-2 text-white/70 text-sm">{p.desc}</p>
+          <div className="mt-10 grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Free",
+                price: "0 ₽",
+                desc: "Базовый анализ, эмоции, возраст, beauty-оценки.",
+                features: ["Загрузка 1 фото", "Эмоции и возраст", "Beauty-оценка"],
+                cta: "Зарегистрироваться",
+                href: "/register",
+                disabled: false,
+              },
+              {
+                name: "Plus",
+                price: "990 ₽",
+                desc: "Расширенный skin-анализ, рекомендации по уходу.",
+                features: ["Skinstatus", "Советы по уходу", "Экспорт отчёта PDF"],
+                cta: "Скоро",
+                href: "#",
+                disabled: true,
+              },
+              {
+                name: "Pro",
+                price: "2 490 ₽",
+                desc: "Полный план самопрезентации + рекомендации по съёмке.",
+                features: ["План самопрезентации", "Подсказки по свету/ракурсу", "Сравнение До/После"],
+                cta: "Скоро",
+                href: "#",
+                disabled: true,
+              },
+            ].map((p, i) => (
+              <motion.div
+                key={p.name}
+                className={`rounded-2xl p-6 border ${
+                  p.disabled
+                    ? "border-white/10 bg-white/[0.04] opacity-70"
+                    : "border-brand-secondary bg-white/[0.08]"
+                }`}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+              >
+                <div className="text-sm text-brand-secondary font-semibold">{p.name}</div>
+                <div className="mt-2 text-3xl font-bold">{p.price}</div>
+                <p className="mt-2 text-white/70 text-sm">{p.desc}</p>
 
-      <ul className="mt-4 space-y-2 text-sm text-white/80">
-        {p.features.map((f) => (
-          <li key={f} className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-primary inline-block" />
-            {f}
-          </li>
-        ))}
-      </ul>
+                <ul className="mt-4 space-y-2 text-sm text-white/80">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-primary inline-block" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
 
-      <Link
-        href={p.disabled ? "#" : p.href}
-        onClick={(e) => p.disabled && e.preventDefault()}
-        className={`mt-6 inline-block w-full text-center px-5 py-3 rounded-xl font-semibold transition ${
-          p.disabled
-            ? "cursor-not-allowed opacity-60 bg-gray-500 text-gray-300"
-            : "text-[#111111] hover:opacity-90"
-        }`}
-        style={{
-          background: p.disabled
-            ? "linear-gradient(135deg, #555 0%, #666 100%)"
-            : "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
-        }}
-      >
-        {p.cta}
-      </Link>
-    </motion.div>
-  ))}
-</div>
+                <Link
+                  href={p.disabled ? "#" : p.href}
+                  onClick={(e) => p.disabled && e.preventDefault()}
+                  className={`mt-6 inline-block w-full text-center px-5 py-3 rounded-xl font-semibold transition ${
+                    p.disabled
+                      ? "cursor-not-allowed opacity-60 bg-gray-500 text-gray-300"
+                      : "text-[#111111] hover:opacity-90"
+                  }`}
+                  style={{
+                    background: p.disabled
+                      ? "linear-gradient(135deg, #555 0%, #666 100%)"
+                      : "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
+                  }}
+                >
+                  {p.cta}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
           </div>
         </section>
 
-        {/* ================= TESTIMONIALS ================= */}
+        {/* ---------- TESTIMONIALS ---------- */}
         <section className="py-24 bg-[#111111]">
           <div className="max-w-6xl mx-auto px-6">
             <h2 className="text-3xl md:text-4xl font-bold">Отзывы</h2>
@@ -373,8 +341,8 @@ export default function HomeV2() {
           </div>
         </section>
 
-        {/* ================= FAQ (аккордеон) ================= */}
-        <section className="py-24 bg-[#0f0f0f]">
+        {/* ---------- FAQ ---------- */}
+        <section id="faq" className="py-24 bg-[#0f0f0f]">
           <div className="max-w-5xl mx-auto px-6">
             <h2 className="text-3xl md:text-4xl font-bold">FAQ</h2>
             <div className="mt-8 divide-y divide-white/10 rounded-2xl border border-white/10 overflow-hidden">
@@ -391,8 +359,7 @@ export default function HomeV2() {
   );
 }
 
-/* ================= helpers ================= */
-
+/* ---------- helpers ---------- */
 function FragmentedTab({ text, img }: { text: string; img: string }) {
   return (
     <>
@@ -425,12 +392,15 @@ function FaqRow({ q, a }: { q: string; a: string }) {
       <button
         className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-white/[0.04] transition"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
       >
         <span className="font-medium">{q}</span>
         <span className="text-white/60">{open ? "−" : "+"}</span>
       </button>
       {open && (
-        <div className="px-5 pb-5 pt-0 text-white/75">{a}</div>
+        <div className="px-5 pb-5 pt-0 text-white/75">
+          {a}
+        </div>
       )}
     </div>
   );
