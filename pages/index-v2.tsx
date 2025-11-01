@@ -267,68 +267,83 @@ export default function HomeV2() {
             </p>
 
             <div className="mt-10 grid md:grid-cols-3 gap-6">
-              {[
-                {
-                  name: "Free",
-                  price: "0 ₽",
-                  desc: "Базовый анализ, эмоции, возраст, beauty-оценки.",
-                  features: ["Загрузка 1 фото", "Эмоции и возраст", "Beauty-оценка"],
-                  cta: "Зарегистрироваться",
-                  href: "/register",
-                  featured: false,
-                },
-                {
-                  name: "Plus",
-                  price: "990 ₽",
-                  desc: "Расширенный skin-анализ, рекомендации по уходу.",
-                  features: ["Skinstatus", "Советы по уходу", "Экспорт отчёта PDF"],
-                  cta: "Оформить",
-                  href: "/register",
-                  featured: true,
-                },
-                {
-                  name: "Pro",
-                  price: "2 490 ₽",
-                  desc: "Полный план самопрезентации + рекомендации по съёмке.",
-                  features: ["План самопрезентации", "Подсказки по свету/ракурсу", "Сравнение До/После"],
-                  cta: "Оформить",
-                  href: "/register",
-                  featured: false,
-                },
-              ].map((p, i) => (
-                <motion.div
-                  key={p.name}
-                  className={`rounded-2xl p-6 border ${
-                    p.featured
-                      ? "border-brand-secondary bg-white/[0.08]"
-                      : "border-white/10 bg-white/[0.04]"
-                  }`}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                >
-                  <div className="text-sm text-brand-secondary font-semibold">{p.name}</div>
-                  <div className="mt-2 text-3xl font-bold">{p.price}</div>
-                  <p className="mt-2 text-white/70 text-sm">{p.desc}</p>
-                  <ul className="mt-4 space-y-2 text-sm text-white/80">
-                    {p.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-brand-primary inline-block" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href={p.href}
-                    className="mt-6 inline-block w-full text-center px-5 py-3 rounded-xl font-semibold text-[#111111]"
-                    style={{ background: "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)" }}
-                  >
-                    {p.cta}
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+  {[
+    {
+      name: "Free",
+      price: "0 ₽",
+      desc: "Базовый анализ, эмоции, возраст, beauty-оценки.",
+      features: ["Загрузка 1 фото", "Эмоции и возраст", "Beauty-оценка"],
+      cta: "Зарегистрироваться",
+      href: "/register",
+      disabled: false,
+    },
+    {
+      name: "Plus",
+      price: "990 ₽",
+      desc: "Расширенный skin-анализ, рекомендации по уходу.",
+      features: ["Skinstatus", "Советы по уходу", "Экспорт отчёта PDF"],
+      cta: "Скоро",
+      href: "#",
+      disabled: true,
+    },
+    {
+      name: "Pro",
+      price: "2 490 ₽",
+      desc: "Полный план самопрезентации + рекомендации по съёмке.",
+      features: [
+        "План самопрезентации",
+        "Подсказки по свету/ракурсу",
+        "Сравнение До/После",
+      ],
+      cta: "Скоро",
+      href: "#",
+      disabled: true,
+    },
+  ].map((p, i) => (
+    <motion.div
+      key={p.name}
+      className={`rounded-2xl p-6 border ${
+        p.disabled
+          ? "border-white/10 bg-white/[0.04] opacity-70"
+          : "border-brand-secondary bg-white/[0.08]"
+      }`}
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4, delay: i * 0.05 }}
+    >
+      <div className="text-sm text-brand-secondary font-semibold">{p.name}</div>
+      <div className="mt-2 text-3xl font-bold">{p.price}</div>
+      <p className="mt-2 text-white/70 text-sm">{p.desc}</p>
+
+      <ul className="mt-4 space-y-2 text-sm text-white/80">
+        {p.features.map((f) => (
+          <li key={f} className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-primary inline-block" />
+            {f}
+          </li>
+        ))}
+      </ul>
+
+      <Link
+        href={p.disabled ? "#" : p.href}
+        onClick={(e) => p.disabled && e.preventDefault()}
+        className={`mt-6 inline-block w-full text-center px-5 py-3 rounded-xl font-semibold transition ${
+          p.disabled
+            ? "cursor-not-allowed opacity-60 bg-gray-500 text-gray-300"
+            : "text-[#111111] hover:opacity-90"
+        }`}
+        style={{
+          background: p.disabled
+            ? "linear-gradient(135deg, #555 0%, #666 100%)"
+            : "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
+        }}
+      >
+        {p.cta}
+      </Link>
+    </motion.div>
+  ))}
+</div>
           </div>
         </section>
 
