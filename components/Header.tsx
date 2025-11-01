@@ -1,13 +1,19 @@
 import Link from "next/link";
-import Logo from "./Logo";
+import Image from "next/image"; // 👈 вот этого импорта не хватало!
 
 export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/80 backdrop-blur-lg border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between text-white">
         {/* === ЛОГО === */}
-        <Link href="/" className="flex items-center gap-2">
-          <Logo className="h-7 w-auto" />
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/logo.svg"
+            alt="Adept Logo"
+            width={120}
+            height={32}
+            priority
+          />
         </Link>
 
         {/* === ЦЕНТРАЛЬНОЕ МЕНЮ === */}
