@@ -1,6 +1,5 @@
-// pages/analyze.tsx
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -17,6 +16,27 @@ export default function AnalyzePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showHint, setShowHint] = useState(false);
+
+  const resultRef = useRef<HTMLDivElement | null>(null);
+
+  /* ---------- Scroll hint ---------- */
+  useEffect(() => {
+    if (result && resultRef.current) {
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 400);
+
+      // Покажем подсказку через 2.5 сек, если пользователь не скроллит
+      const timer = setTimeout(() => setShowHint(true), 2500);
+      const handleScroll = () => setShowHint(false);
+      window.addEventListener("scroll", handleScroll);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("scroll", handleScroll);
+      };
+    }
+  }, [result]);
 
   /* ---------- Helpers ---------- */
   const toBase64 = (f: File) =>
@@ -29,8 +49,7 @@ export default function AnalyzePage() {
 
   const normalizeValue = (val?: number) => {
     if (val === undefined || val === null || Number.isNaN(val)) return 0;
-    const p = Math.min(Math.max((val / 5) * 100, 0), 100);
-    return p;
+    return Math.min(Math.max((val / 5) * 100, 0), 100);
   };
 
   const badgeFor = (percent: number) => {
@@ -51,7 +70,6 @@ export default function AnalyzePage() {
     const percent = normalizeValue(val);
     const color = barColor(percent);
     const b = badgeFor(percent);
-
     return (
       <div key={label} className="mb-4">
         <div className="flex items-center justify-between text-sm mb-1">
@@ -101,6 +119,7 @@ export default function AnalyzePage() {
       setLoading(true);
       setError(null);
       setResult(null);
+      setShowHint(false);
 
       const base64 = await toBase64(file);
       const res = await fetch("/api/analyze-face", {
@@ -119,6 +138,7 @@ export default function AnalyzePage() {
     }
   };
 
+  /* ---------- Derived ---------- */
   const face = result?.faces?.[0];
   const attrs = face?.attributes;
   const skin = attrs?.skinstatus;
@@ -133,7 +153,7 @@ export default function AnalyzePage() {
 
       <Header />
 
-      <main className="min-h-screen bg-[#111111] text-white py-20 px-6">
+      <main className="min-h-screen bg-[#111111] text-white py-20 px-6 relative">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h1
             className="text-4xl md:text-5xl font-bold mb-4"
@@ -226,6 +246,7 @@ export default function AnalyzePage() {
                   setPreview(null);
                   setResult(null);
                   setError(null);
+                  setShowHint(false);
                 }}
                 className="px-6 py-3 rounded-xl font-medium bg-white/[0.05] border border-white/10 text-white/70 hover:bg-white/[0.1] transition"
               >
@@ -235,14 +256,13 @@ export default function AnalyzePage() {
           </div>
 
           {/* Error */}
-          {error && (
-            <p className="mt-4 text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
 
           {/* Results */}
           {face && (
             <motion.div
-              className="mt-12 bg-white/[0.06] border border-white/10 rounded-2xl p-8 shadow-md text-left max-w-md mx-auto"
+              ref={resultRef}
+              className="mt-12 bg-white/[0.06] border border-white/10 rounded-2xl p-8 shadow-md text-left max-w-md mx-auto relative"
               initial={{ opacity: 0, y: 8, scale: 0.99 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.35 }}
@@ -261,14 +281,8 @@ export default function AnalyzePage() {
                         .sort((a, b) => b[1] - a[1])[0][0]
                     : "—"}
                 </p>
-                <p>
-                  <b>Beauty (♀):</b>{" "}
-                  {attrs?.beauty?.female_score?.toFixed(1) ?? "—"}
-                </p>
-                <p>
-                  <b>Beauty (♂):</b>{" "}
-                  {attrs?.beauty?.male_score?.toFixed(1) ?? "—"}
-                </p>
+                <p><b>Beauty (♀):</b> {attrs?.beauty?.female_score?.toFixed(1) ?? "—"}</p>
+                <p><b>Beauty (♂):</b> {attrs?.beauty?.male_score?.toFixed(1) ?? "—"}</p>
               </div>
 
               {skin && (
@@ -282,6 +296,19 @@ export default function AnalyzePage() {
                   {renderBar("Здоровье кожи", skin.health)}
                 </>
               )}
+            </motion.div>
+          )}
+
+          {/* Scroll hint */}
+          {showHint && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/[0.08] border border-white/10 px-4 py-2 rounded-xl text-sm text-white/70 backdrop-blur-md"
+            >
+              ⬇ Прокрутите вниз, чтобы увидеть результаты
             </motion.div>
           )}
 
