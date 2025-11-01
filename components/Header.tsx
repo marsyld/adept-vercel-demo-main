@@ -41,17 +41,19 @@ export default function Header() {
         {/* === CTA-ПРАВАЯ ЗОНА === */}
         <div className="flex items-center gap-4 text-sm">
           <Link
-            href="/register"
-            className="px-4 py-2 rounded-xl bg-brand-primary text-[#111111] font-medium hover:opacity-90 transition"
-          >
-            Регистрация
-          </Link>
-          <Link
             href="/login"
             className="text-white/80 hover:text-brand-secondary transition"
           >
             Войти
           </Link>
+
+          <Link
+            href="/register"
+            className="px-4 py-2 rounded-xl bg-brand-primary text-[#111111] font-medium hover:opacity-90 transition"
+          >
+            Регистрация
+          </Link>
+          
         </div>
       </div>
     </header>
