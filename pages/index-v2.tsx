@@ -19,28 +19,28 @@ export default function HomeV2() {
       label: "Клинический уровень анализа",
       text:
         "Мы используем сканирование клинического уровня и строим карту из 521 точки лица под разными углами, чтобы получить детальный и точный анализ.",
-      img: "/qoves/research-clinical.jpg",
+      img: "/research-clinical.png",
     },
     {
       key: "personalization",
       label: "Непревзойдённая персонализация",
       text:
         "Мы учитываем вашу этничность, возраст, регион, образ жизни и бюджет. Каждый план улучшений — уникален.",
-      img: "/qoves/research-personalization.jpg",
+      img: "/research-personalization.png",
     },
     {
       key: "evidence",
       label: "Доказательный подход",
       text:
         "Мы опираемся на измеримые биометрические данные и рецензируемые исследования, а не на субъективные мнения.",
-      img: "/qoves/research-evidence.jpg",
+      img: "/research-evidence.png",
     },
     {
       key: "science",
       label: "Наука о привлекательности лица",
       text:
         "База Diagnosia изучает науку о привлекательности на данных из разных групп и сравнивает ваше лицо с тысячами исследований, чтобы предложить то, что работает именно для вас.",
-      img: "/qoves/research-science.jpg",
+      img: "/research-science.png",
     },
   ];
   const [activeTab, setActiveTab] = useState(researchTabs[0].key);
