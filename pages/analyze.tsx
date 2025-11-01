@@ -16,25 +16,18 @@ export default function AnalyzePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showHint, setShowHint] = useState(false);
 
   const resultRef = useRef<HTMLDivElement | null>(null);
 
-  /* ---------- Scroll hint ---------- */
+  /* ---------- Автоскролл ---------- */
   useEffect(() => {
     if (result && resultRef.current) {
       setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const yOffset = -150; // немного выше, чтобы не прокручивало до футера
+        const elementTop =
+          resultRef.current.getBoundingClientRect().top + window.scrollY + yOffset;
+        window.scrollTo({ top: elementTop, behavior: "smooth" });
       }, 400);
-
-      // Покажем подсказку через 2.5 сек, если пользователь не скроллит
-      const timer = setTimeout(() => setShowHint(true), 2500);
-      const handleScroll = () => setShowHint(false);
-      window.addEventListener("scroll", handleScroll);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener("scroll", handleScroll);
-      };
     }
   }, [result]);
 
@@ -119,7 +112,6 @@ export default function AnalyzePage() {
       setLoading(true);
       setError(null);
       setResult(null);
-      setShowHint(false);
 
       const base64 = await toBase64(file);
       const res = await fetch("/api/analyze-face", {
@@ -153,7 +145,7 @@ export default function AnalyzePage() {
 
       <Header />
 
-      <main className="min-h-screen bg-[#111111] text-white py-20 px-6 relative">
+      <main className="min-h-screen bg-[#111111] text-white py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h1
             className="text-4xl md:text-5xl font-bold mb-4"
@@ -246,7 +238,6 @@ export default function AnalyzePage() {
                   setPreview(null);
                   setResult(null);
                   setError(null);
-                  setShowHint(false);
                 }}
                 className="px-6 py-3 rounded-xl font-medium bg-white/[0.05] border border-white/10 text-white/70 hover:bg-white/[0.1] transition"
               >
@@ -262,7 +253,7 @@ export default function AnalyzePage() {
           {face && (
             <motion.div
               ref={resultRef}
-              className="mt-12 bg-white/[0.06] border border-white/10 rounded-2xl p-8 shadow-md text-left max-w-md mx-auto relative"
+              className="mt-12 bg-white/[0.06] border border-white/10 rounded-2xl p-8 shadow-md text-left max-w-md mx-auto"
               initial={{ opacity: 0, y: 8, scale: 0.99 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.35 }}
@@ -296,19 +287,6 @@ export default function AnalyzePage() {
                   {renderBar("Здоровье кожи", skin.health)}
                 </>
               )}
-            </motion.div>
-          )}
-
-          {/* Scroll hint */}
-          {showHint && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/[0.08] border border-white/10 px-4 py-2 rounded-xl text-sm text-white/70 backdrop-blur-md"
-            >
-              ⬇ Прокрутите вниз, чтобы увидеть результаты
             </motion.div>
           )}
 
