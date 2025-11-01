@@ -9,3 +9,7 @@ a { @apply text-brand-primary hover:opacity-80; }
 
 /* Тонкая кастомизация range (ползунок шторки) */
 input[type="range"] { @apply accent-brand-primary; }
+
+html, body {
+  background-color: #111111;
+}
