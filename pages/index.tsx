@@ -150,22 +150,6 @@ export default function HomeV2() {
           </div>
         </section>
 
-        {/* ---------- PRESS ---------- */}
-        <section className="py-14 border-t border-white/10">
-          <div className="max-w-6xl mx-auto px-6 text-center">
-            <p className="uppercase tracking-widest text-xs text-white/50 mb-6">
-              О нас пишут
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center opacity-80">
-              <img src="/qoves/press-forbes.svg" alt="Forbes" className="h-6 mx-auto" />
-              <img src="/qoves/press-wired.svg" alt="Wired" className="h-6 mx-auto" />
-              <img src="/qoves/press-guardian.svg" alt="The Guardian" className="h-6 mx-auto" />
-              <img src="/qoves/press-vogue.svg" alt="Vogue" className="h-6 mx-auto" />
-              <img src="/qoves/press-cosmopolitan.svg" alt="Cosmopolitan" className="h-6 mx-auto" />
-            </div>
-          </div>
-        </section>
-
         {/* ---------- HOW IT WORKS ---------- */}
         <section id="how-it-works" className="py-24 bg-[#0f0f0f]">
           <div className="max-w-6xl mx-auto px-6">
@@ -194,41 +178,89 @@ export default function HomeV2() {
         </section>
 
         {/* ---------- RESEARCH ---------- */}
-        <section id="research" className="py-24 bg-[#111111]">
-          <div className="max-w-6xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold">Почему это работает</h2>
-            <p className="mt-4 max-w-2xl text-white/70">
-              Мы соединяем нейротехнологии, данные и косметологию, чтобы вы
-              получили точный, объективный и персональный анализ.
-            </p>
+<section id="research" className="py-28 bg-[#111111]">
+  <div className="max-w-7xl mx-auto px-6">
+    <h2 className="text-3xl md:text-5xl font-bold mb-6">
+      Почему это работает
+    </h2>
 
-            <div className="mt-10 grid md:grid-cols-4 gap-3">
-              {researchTabs.map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={`text-left rounded-xl px-4 py-3 text-sm border transition ${
-                    activeTab === t.key
-                      ? "border-brand-secondary bg-white/10"
-                      : "border-white/10 hover:bg-white/5"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
+    <p className="max-w-3xl text-white/70 text-lg leading-relaxed mb-12">
+      Мы не просто используем ИИ — мы объединяем нейросетевые модели с научными принципами эстетической медицины. 
+      Алгоритмы анализируют более 500 точек лица, форму костной структуры, пропорции и симметрию. 
+      Каждый анализ проходит через базу <span className="text-brand-secondary">Diagnosia Database</span>, 
+      где собраны результаты клинических исследований и этнических выборок. 
+      Это позволяет Adept рекомендовать именно то, что подходит вашей внешности, а не навязывать универсальные шаблоны красоты.
+    </p>
 
-            <div className="mt-8 grid md:grid-cols-2 gap-6 items-center">
-              <AnimatePresence mode="wait">
-                {researchTabs
-                  .filter((t) => t.key === activeTab)
-                  .map((t) => (
-                    <FragmentedTab key={t.key} text={t.text} img={t.img} />
-                  ))}
-              </AnimatePresence>
-            </div>
-          </div>
-        </section>
+    <div className="mt-10 grid md:grid-cols-2 gap-8 items-center">
+      <motion.div
+        className="rounded-2xl p-8 bg-white/[0.06] border border-white/10 backdrop-blur-sm"
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+      >
+        <h3 className="text-2xl font-semibold mb-4 text-brand-secondary">
+          Многомерный анализ
+        </h3>
+        <p className="text-white/80 text-base leading-relaxed">
+          Adept анализирует лицо не как статичное изображение, а как живую систему: 
+          оценивает текстуру кожи, выражение, симметрию и микромимику. 
+          Такой подход позволяет понять не только визуальные параметры, 
+          но и то, как вы воспринимаетесь окружающими — уверенно, открыто или уставше.
+        </p>
+      </motion.div>
+
+      <motion.div
+        className="overflow-hidden rounded-2xl border border-white/10 bg-white/5"
+        initial={{ opacity: 0, scale: 0.97 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+      >
+        <img
+          src="/research-clinical.png"
+          alt="AI Facial Scan"
+          className="w-full h-[480px] object-cover object-center"
+        />
+      </motion.div>
+    </div>
+
+    <div className="mt-12 grid md:grid-cols-2 gap-8 items-center">
+      <motion.div
+        className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 order-2 md:order-1"
+        initial={{ opacity: 0, scale: 0.97 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+      >
+        <img
+          src="/research-science.png"
+          alt="Facial Symmetry Mapping"
+          className="w-full h-[480px] object-cover object-center"
+        />
+      </motion.div>
+
+      <motion.div
+        className="rounded-2xl p-8 bg-white/[0.06] border border-white/10 backdrop-blur-sm order-1 md:order-2"
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+      >
+        <h3 className="text-2xl font-semibold mb-4 text-brand-secondary">
+          От данных — к рекомендациям
+        </h3>
+        <p className="text-white/80 text-base leading-relaxed">
+          После анализа мы формируем персональный отчёт: от подбора света и позы 
+          до ухода, который помогает коже восстановить естественный тонус. 
+          Каждый совет подкреплён статистикой и основан на тысячах похожих случаев. 
+          Никаких субъективных оценок — только измеримые результаты.
+        </p>
+      </motion.div>
+    </div>
+  </div>
+</section>
 
         {/* ---------- PLANS ---------- */}
         <section id="plans" className="py-24 bg-[#0f0f0f]">
