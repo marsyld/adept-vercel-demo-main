@@ -1,12 +1,14 @@
 // pages/clinic/patients/[id]/upload.tsx
 "use client";
 
-import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
+import Link from "next/link"; // ← ДОБАВЬ ЭТО
+import { useRouter } from "next/router";
+
 
 export default function UploadAnalysisPage() {
   const router = useRouter();
