@@ -260,7 +260,7 @@ export default function HomeV2() {
       </motion.div>
     </div>
   </div>
-</section>
+</section>п
 
         {/* ---------- PLANS ---------- */}
         <section id="plans" className="py-24 bg-[#0f0f0f]">

@@ -120,7 +120,7 @@ export default function Home() {
                 before="/demo/before-man.jpg"
                 after="/demo/after-man.jpg"
                 beforeAlt="Мужской портрет — До"
-                afterAlt="Мужской портрет — После"
+                afterAlt="Мужской портрет — После"                
               />
             </div>
           </div>

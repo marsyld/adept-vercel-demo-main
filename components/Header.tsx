@@ -1,10 +1,11 @@
 import Link from "next/link";
-import Image from "next/image"; // 👈 вот этого импорта не хватало!
+import Image from "next/image";
 
 export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/80 backdrop-blur-lg border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between text-white">
+        
         {/* === ЛОГО === */}
         <Link href="/" className="flex items-center">
           <Image
@@ -18,28 +19,20 @@ export default function Header() {
 
         {/* === ЦЕНТРАЛЬНОЕ МЕНЮ === */}
         <nav className="hidden md:flex items-center gap-8 text-sm">
-          <a
-            href="#how-it-works"
-            className="hover:text-brand-primary transition-colors"
-          >
+          <a href="#how-it-works" className="hover:text-brand-primary transition-colors">
             Как это работает
           </a>
-          <a
-            href="#plans"
-            className="hover:text-brand-primary transition-colors"
-          >
+          <a href="#plans" className="hover:text-brand-primary transition-colors">
             Тарифы
           </a>
-          <a
-            href="#faq"
-            className="hover:text-brand-primary transition-colors"
-          >
+          <a href="#faq" className="hover:text-brand-primary transition-colors">
             F.A.Q.
           </a>
         </nav>
 
         {/* === CTA-ПРАВАЯ ЗОНА === */}
         <div className="flex items-center gap-4 text-sm">
+
           <Link
             href="/login"
             className="text-white/80 hover:text-brand-secondary transition"
@@ -53,7 +46,15 @@ export default function Header() {
           >
             Регистрация
           </Link>
-          
+
+          {/* Для клиник */}
+          <Link
+            href="/register-clinic"
+            className="hidden md:inline-flex px-4 py-2 rounded-xl border border-white/20 text-sm text-white/80 hover:bg-white/[0.06] transition"
+          >
+            Для клиник
+          </Link>
+
         </div>
       </div>
     </header>

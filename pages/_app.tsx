@@ -20,7 +20,7 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <meta property="og:type" content="website" />
         <meta name="theme-color" content="#7B61FF" />
-        <link rel="icon" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.svggi" />
         <meta property="og:image" content="/og-image.png" />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="1200" />
