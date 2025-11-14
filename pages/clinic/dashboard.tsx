@@ -1,166 +1,176 @@
 // pages/clinic/dashboard.tsx
+"use client";
+
+import { useEffect, useState } from "react";
 import Head from "next/head";
-import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
-export default function ClinicDashboardPage() {
-  // Пока всё статично: тестовый кабинет
-  const clinicName = "Adept Clinic (демо)";
-  const stats = {
-    patients: 18,
-    analysesTotal: 64,
-    analysesWeek: 7,
-  };
+export default function ClinicDashboard() {
+  const [patients, setPatients] = useState<any[]>([]);
+  const [analyses, setAnalyses] = useState<any[]>([]);
 
+  /* ----------- Load data ----------- */
+  useEffect(() => {
+    const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
+    setPatients(list);
+
+    const all = list.flatMap((p: any) =>
+      (p.analyses || []).map((a: any) => ({ ...a, patient: p }))
+    );
+    setAnalyses(all);
+  }, []);
+
+  /* ----------- Calculations ----------- */
+  const totalPatients: number = patients.length;
+  const totalAnalyses: number = analyses.length;
+
+  // Средний возраст
+  let avgAge: number = 0;
+  if (analyses.length > 0) {
+    let sumAge = 0;
+    for (const a of analyses) {
+      const age = Number(a?.attrs?.age?.value ?? 0);
+      sumAge += age;
+    }
+    avgAge = Math.round(sumAge / analyses.length);
+  }
+
+  // Средний beauty score (female)
+  let avgBeauty: string | number = 0;
+  if (analyses.length > 0) {
+    let sumBeauty = 0;
+    for (const a of analyses) {
+      const score = Number(a?.attrs?.beauty?.female_score ?? 0);
+      sumBeauty += score;
+    }
+    avgBeauty = (sumBeauty / analyses.length).toFixed(1);
+  }
+
+  /* --- Top skin problems --- */
+  const topProblem: string = (() => {
+    if (!analyses.length) return "Нет данных";
+
+    const counts: Record<string, number> = {};
+
+    for (const a of analyses) {
+      const skin = a?.attrs?.skinstatus;
+      if (!skin) continue;
+
+      Object.entries(skin).forEach(([key, val]) => {
+        const numeric = Number(val ?? 0);
+        counts[key] = (counts[key] ?? 0) + numeric;
+      });
+    }
+
+    const entries = Object.entries(counts);
+    if (!entries.length) return "Нет данных";
+
+    const sorted = entries.sort((a, b) => b[1] - a[1]);
+
+    const map: Record<string, string> = {
+      acne: "Акне",
+      dark_circle: "Круги под глазами",
+      stain: "Пигментация",
+      health: "Общее здоровье кожи",
+    };
+
+    const topKey = sorted[0][0];
+    return map[topKey] || topKey;
+  })();
+
+  /* ----------- Render ----------- */
   return (
     <>
       <Head>
-        <title>Adept — Кабинет клиники</title>
-        <meta
-          name="description"
-          content="Кабинет косметологической клиники в Adept: пациенты, анализы и отчёты."
-        />
+        <title>Статистика клиники — Adept</title>
       </Head>
 
       <Header />
 
-      <main className="min-h-screen bg-[#111111] text-white py-20 px-6">
+      <main className="bg-[#111111] text-white min-h-screen py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          {/* Заголовок и приветствие */}
-          <motion.div
-            className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-          >
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                Кабинет клиники
-              </h1>
-              <p className="text-white/60 text-sm">
-                {clinicName}. Тестовый режим — данные сохранены только на этой сессии.
-              </p>
-            </div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-10">
+            Панель управления клиники
+          </h1>
 
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/clinic/patients"
-                className="px-5 py-3 rounded-xl text-sm font-semibold text-[#111111]"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
-                }}
+          {/* -------- METRICS -------- */}
+          <div className="grid md:grid-cols-4 gap-6 mb-12">
+            {[
+              { label: "Пациентов", value: totalPatients },
+              { label: "Анализов", value: totalAnalyses },
+              { label: "Средний возраст", value: totalAnalyses > 0 ? avgAge : "—" },
+              { label: "Beauty Score ~", value: totalAnalyses > 0 ? avgBeauty : "—" },
+            ].map((m, i) => (
+              <motion.div
+                key={i}
+                className="bg-white/[0.06] border border-white/10 rounded-2xl p-6 text-center"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
               >
-                Открыть список пациентов
-              </Link>
-              <Link
-                href="/analyze"
-                className="px-5 py-3 rounded-xl text-sm font-semibold border border-white/20 text-white/80 hover:bg-white/[0.06] transition"
-              >
-                Быстрый анализ фото
-              </Link>
-            </div>
-          </motion.div>
+                <div className="text-white/60 text-sm">{m.label}</div>
+                <div className="text-3xl font-bold mt-2">{m.value}</div>
+              </motion.div>
+            ))}
+          </div>
 
-          {/* Статистика */}
-          <motion.div
-            className="grid md:grid-cols-3 gap-6 mb-12"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+          {/* -------- TOP PROBLEM -------- */}
+          <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-6 mb-12">
+            <h3 className="text-xl font-semibold mb-3">
+              Топ-проблема кожи среди пациентов
+            </h3>
+            <p className="text-white/60 text-lg">{topProblem}</p>
+          </div>
+
+          {/* -------- LAST ANALYSES -------- */}
+          <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-6 mb-12">
+            <h3 className="text-xl font-semibold mb-4">
+              Последние анализы
+            </h3>
+
+            {analyses.length === 0 ? (
+              <p className="text-white/50 text-sm">Нет данных</p>
+            ) : (
+              <div className="space-y-4">
+                {analyses.slice(0, 5).map((a, i) => (
+                  <div
+                    key={i}
+                    className="border-b border-white/10 pb-3 flex items-center gap-4"
+                  >
+                    {a.photo && (
+                      <img
+                        src={a.photo}
+                        className="w-16 h-16 object-cover rounded-xl"
+                        alt=""
+                      />
+                    )}
+                    <div>
+                      <div className="text-white/90">
+                        {a.patient?.name || "Пациент"}
+                      </div>
+                      <div className="text-xs text-white/50">
+                        {new Date(a.date).toLocaleString("ru-RU")}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* -------- CTA -------- */}
+          <Link
+            href="/clinic/patients/new"
+            className="inline-block px-7 py-3 rounded-xl font-semibold text-[#111]"
+            style={{
+              background: "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
+            }}
           >
-            <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-5">
-              <div className="text-xs text-white/50 mb-1">Пациентов</div>
-              <div className="text-3xl font-semibold">{stats.patients}</div>
-              <div className="text-xs text-white/40 mt-1">
-                Общее количество заведённых пациентов
-              </div>
-            </div>
-            <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-5">
-              <div className="text-xs text-white/50 mb-1">Анализов всего</div>
-              <div className="text-3xl font-semibold">{stats.analysesTotal}</div>
-              <div className="text-xs text-white/40 mt-1">
-                Все выполненные ИИ-анализы
-              </div>
-            </div>
-            <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-5">
-              <div className="text-xs text-white/50 mb-1">
-                Анализов за 7 дней
-              </div>
-              <div className="text-3xl font-semibold">{stats.analysesWeek}</div>
-              <div className="text-xs text-white/40 mt-1">
-                Динамика использования за последнюю неделю
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Быстрые действия */}
-          <motion.div
-            className="grid md:grid-cols-2 gap-6 mb-16"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-          >
-            <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <h2 className="text-lg font-semibold mb-2">
-                  Добавить пациента
-                </h2>
-                <p className="text-sm text-white/70 mb-4">
-                  Создайте карточку пациента с базовыми данными, чтобы
-                  хранить историю его анализов и работы с ним.
-                </p>
-              </div>
-              <Link
-                href="/clinic/patients"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-white/20 text-sm text-white/80 hover:bg-white/[0.06] transition"
-              >
-                Перейти к пациентам
-              </Link>
-            </div>
-
-            <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <h2 className="text-lg font-semibold mb-2">
-                  Анализ по фото
-                </h2>
-                <p className="text-sm text-white/70 mb-4">
-                  Загрузите фото пациента, чтобы получить ИИ-анализ:
-                  возраст, эмоции, состояние кожи и beauty-показатели.
-                </p>
-              </div>
-              <Link
-                href="/analyze"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-semibold text-[#111111]"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
-                }}
-              >
-                Запустить анализ
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* Заглушка под будущие разделы */}
-          <motion.div
-            className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-8"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-          >
-            <h2 className="text-lg font-semibold mb-2">
-              Что появится дальше
-            </h2>
-            <ul className="text-sm text-white/70 list-disc list-inside space-y-1">
-              <li>Отчёты по каждому пациенту в PDF</li>
-              <li>История анализов и динамика изменений</li>
-              <li>Командный доступ для врачей и администраторов</li>
-              <li>Настройки брендинга вашей клиники</li>
-            </ul>
-          </motion.div>
+            + Добавить пациента
+          </Link>
         </div>
       </main>
 
