@@ -6,9 +6,8 @@ import Head from "next/head";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
-import Link from "next/link"; // ← ДОБАВЬ ЭТО
+import Link from "next/link";
 import { useRouter } from "next/router";
-
 
 export default function UploadAnalysisPage() {
   const router = useRouter();
@@ -20,23 +19,36 @@ export default function UploadAnalysisPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* --------- загрузка пациента --------- */
+  /* ---------- load patient ---------- */
   useEffect(() => {
     if (!id) return;
     const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
-    const found = list.find((p: any) => p.id === id);
-    setPatient(found || null);
+    setPatient(list.find((p: any) => p.id === id) || null);
   }, [id]);
 
-  const toBase64 = (f: File) =>
-    new Promise<string>((resolve, reject) => {
+  /* ---------- convert to base64 (safe) ---------- */
+  const fileToBase64 = (f: File): Promise<string> =>
+    new Promise((resolve, reject) => {
       const r = new FileReader();
       r.readAsDataURL(f);
-      r.onload = () => resolve((r.result as string).split(",")[1]);
+      r.onload = () => {
+        const result = r.result as string;
+        const pure = result.replace(/^data:.+;base64,/, "");
+        resolve(pure);
+      };
       r.onerror = reject;
     });
 
-  /* ---------- upload & analyze ---------- */
+  /* ---------- convert to base64 for preview ---------- */
+  const fileToPreview = (f: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.readAsDataURL(f);
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+    });
+
+  /* ---------- analyze ---------- */
   const startAnalyze = async () => {
     if (!file || !id) return;
 
@@ -44,12 +56,13 @@ export default function UploadAnalysisPage() {
       setLoading(true);
       setError(null);
 
-      const base64 = await toBase64(file);
+      const previewBase64 = await fileToPreview(file); // для UI
+      const pureBase64 = await fileToBase64(file); // для API
 
       const res = await fetch("/api/analyze-face", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64 }),
+        body: JSON.stringify({ imageBase64: pureBase64 }),
       });
 
       if (!res.ok) throw new Error(await res.text());
@@ -57,19 +70,19 @@ export default function UploadAnalysisPage() {
       const data = await res.json();
       const face = data?.faces?.[0];
 
-      /* ---------- обновляем пациента ---------- */
+      /* ---------- update patient ---------- */
       const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
 
       const updated = list.map((p: any) =>
         p.id === id
           ? {
               ...p,
-              lastPhoto: preview, // закрепляем последнее фото
+              lastPhoto: previewBase64,
               analyses: [
                 {
                   date: Date.now(),
                   attrs: face?.attributes || null,
-                  photo: preview,
+                  photo: previewBase64,
                 },
                 ...(p.analyses || []),
               ],
@@ -79,7 +92,6 @@ export default function UploadAnalysisPage() {
 
       localStorage.setItem("ADEPT_PATIENTS", JSON.stringify(updated));
 
-      // переход обратно
       router.push(`/clinic/patients/${id}`);
     } catch (e: any) {
       setError(e?.message || "Ошибка анализа");
@@ -88,7 +100,6 @@ export default function UploadAnalysisPage() {
     }
   };
 
-  /* --------- no patient --------- */
   if (!patient) {
     return (
       <main className="min-h-screen bg-[#111] text-white flex items-center justify-center">
@@ -97,7 +108,7 @@ export default function UploadAnalysisPage() {
     );
   }
 
-  /* --------- UI --------- */
+  /* ---------- UI ---------- */
   return (
     <>
       <Head>
@@ -106,14 +117,15 @@ export default function UploadAnalysisPage() {
 
       <Header />
 
-      <main className="min-h-screen bg-[#111111] text-white py-20 px-6">
+      <main className="min-h-screen bg-[#111] text-white py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-6">
             Новый анализ пациента
           </h1>
 
           <p className="text-white/60 mb-10">
-            Пациент: <span className="text-brand-secondary">{patient.name}</span>
+            Пациент:{" "}
+            <span className="text-brand-secondary">{patient.name}</span>
           </p>
 
           {/* Upload */}
@@ -121,12 +133,12 @@ export default function UploadAnalysisPage() {
             className="border-2 border-dashed border-white/20 rounded-2xl p-8 mb-6 cursor-pointer hover:border-brand-secondary hover:bg-white/[0.04] transition"
             onClick={() => document.getElementById("filePatient")?.click()}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
+            onDrop={async (e) => {
               e.preventDefault();
               const f = e.dataTransfer.files?.[0];
               if (!f) return;
               setFile(f);
-              setPreview(URL.createObjectURL(f));
+              setPreview(await fileToPreview(f));
             }}
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -151,11 +163,11 @@ export default function UploadAnalysisPage() {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e) => {
+              onChange={async (e) => {
                 const f = e.target.files?.[0];
                 if (!f) return;
                 setFile(f);
-                setPreview(URL.createObjectURL(f));
+                setPreview(await fileToPreview(f));
               }}
             />
           </motion.div>
