@@ -15,40 +15,28 @@ export default function UploadAnalysisPage() {
 
   const [patient, setPatient] = useState<any>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previewBase64, setPreviewBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* ---------- load patient ---------- */
+  /* -------- Загрузка пациента -------- */
   useEffect(() => {
     if (!id) return;
     const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
-    setPatient(list.find((p: any) => p.id === id) || null);
+    const found = list.find((p: any) => p.id === id);
+    setPatient(found || null);
   }, [id]);
 
-  /* ---------- convert to base64 (safe) ---------- */
-  const fileToBase64 = (f: File): Promise<string> =>
+  /* --- Конвертация в Base64 с полным префиксом --- */
+  const fileToBase64WithPrefix = (f: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const r = new FileReader();
-      r.readAsDataURL(f);
-      r.onload = () => {
-        const result = r.result as string;
-        const pure = result.replace(/^data:.+;base64,/, "");
-        resolve(pure);
-      };
+      r.onload = () => resolve(r.result as string); // уже содержит data:image/jpeg;base64
       r.onerror = reject;
+      r.readAsDataURL(f);
     });
 
-  /* ---------- convert to base64 for preview ---------- */
-  const fileToPreview = (f: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.readAsDataURL(f);
-      r.onload = () => resolve(r.result as string);
-      r.onerror = reject;
-    });
-
-  /* ---------- analyze ---------- */
+  /* ----------- Отправка в API и сохранение ----------- */
   const startAnalyze = async () => {
     if (!file || !id) return;
 
@@ -56,8 +44,9 @@ export default function UploadAnalysisPage() {
       setLoading(true);
       setError(null);
 
-      const previewBase64 = await fileToPreview(file); // для UI
-      const pureBase64 = await fileToBase64(file); // для API
+      // Base64 полный (с префиксом)
+      const fullBase64 = await fileToBase64WithPrefix(file);
+      const pureBase64 = fullBase64.split(",")[1]; // API принимает без префикса
 
       const res = await fetch("/api/analyze-face", {
         method: "POST",
@@ -70,19 +59,22 @@ export default function UploadAnalysisPage() {
       const data = await res.json();
       const face = data?.faces?.[0];
 
-      /* ---------- update patient ---------- */
+      /* ---------- обновляем пациента ---------- */
       const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
 
       const updated = list.map((p: any) =>
         p.id === id
           ? {
               ...p,
-              lastPhoto: previewBase64,
+
+              // Сохраняем фиксированное фото
+              lastPhoto: fullBase64,
+
               analyses: [
                 {
                   date: Date.now(),
                   attrs: face?.attributes || null,
-                  photo: previewBase64,
+                  photo: fullBase64,
                 },
                 ...(p.analyses || []),
               ],
@@ -108,7 +100,6 @@ export default function UploadAnalysisPage() {
     );
   }
 
-  /* ---------- UI ---------- */
   return (
     <>
       <Head>
@@ -117,15 +108,14 @@ export default function UploadAnalysisPage() {
 
       <Header />
 
-      <main className="min-h-screen bg-[#111] text-white py-20 px-6">
+      <main className="min-h-screen bg-[#111111] text-white py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-6">
             Новый анализ пациента
           </h1>
 
           <p className="text-white/60 mb-10">
-            Пациент:{" "}
-            <span className="text-brand-secondary">{patient.name}</span>
+            Пациент: <span className="text-brand-secondary">{patient.name}</span>
           </p>
 
           {/* Upload */}
@@ -137,16 +127,18 @@ export default function UploadAnalysisPage() {
               e.preventDefault();
               const f = e.dataTransfer.files?.[0];
               if (!f) return;
+
               setFile(f);
-              setPreview(await fileToPreview(f));
+              const base64 = await fileToBase64WithPrefix(f);
+              setPreviewBase64(base64);
             }}
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {preview ? (
+            {previewBase64 ? (
               <img
-                src={preview}
+                src={previewBase64}
                 className="mx-auto rounded-xl max-h-80 object-contain shadow-lg"
               />
             ) : (
@@ -167,12 +159,12 @@ export default function UploadAnalysisPage() {
                 const f = e.target.files?.[0];
                 if (!f) return;
                 setFile(f);
-                setPreview(await fileToPreview(f));
+                const base64 = await fileToBase64WithPrefix(f);
+                setPreviewBase64(base64);
               }}
             />
           </motion.div>
 
-          {/* Actions */}
           <div className="flex gap-4 justify-center">
             <button
               onClick={startAnalyze}
