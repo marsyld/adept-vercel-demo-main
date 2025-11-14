@@ -13,9 +13,9 @@ export default function ClinicDashboard() {
   const [patients, setPatients] = useState<any[]>([]);
   const [analyses, setAnalyses] = useState<any[]>([]);
 
-  /* ----------- Load + Seed Patients ----------- */
+  /* ----------- Load data ----------- */
   useEffect(() => {
-    initSeedPatients(); // ← подгрузит seed, если нет данных
+    initSeedPatients();
 
     const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
     setPatients(list);
@@ -31,52 +31,51 @@ export default function ClinicDashboard() {
   const totalAnalyses = analyses.length;
 
   // Средний возраст
-  const avgAge =
-    totalAnalyses > 0
-      ? Math.round(
-          analyses.reduce(
-            (acc, a) => acc + Number(a?.attrs?.age?.value ?? 0),
-            0
-          ) / totalAnalyses
-        )
-      : 0;
+  let avgAge = 0;
+  if (analyses.length > 0) {
+    const sumAge = analyses.reduce(
+      (acc, a) => acc + Number(a?.attrs?.age?.value ?? 0),
+      0
+    );
+    avgAge = Math.round(sumAge / analyses.length);
+  }
 
-  // Средний beauty score (female)
-  const avgBeauty =
-    totalAnalyses > 0
-      ? (
-          analyses.reduce(
-            (acc, a) => acc + Number(a?.attrs?.beauty?.female_score ?? 0),
-            0
-          ) / totalAnalyses
-        ).toFixed(1)
-      : "—";
+  // Средний beauty
+  let avgBeauty: string | number = 0;
+  if (analyses.length > 0) {
+    const sumBeauty = analyses.reduce(
+      (acc, a) => acc + Number(a?.attrs?.beauty?.female_score ?? 0),
+      0
+    );
+    avgBeauty = (sumBeauty / analyses.length).toFixed(1);
+  }
 
-  /* --- Top skin problem --- */
+  /* --- Top skin problems --- */
   const topProblem = (() => {
-    if (!totalAnalyses) return "Нет данных";
+    if (!analyses.length) return "Нет данных";
 
     const counts: Record<string, number> = {};
 
-    analyses.forEach((a) => {
+    for (const a of analyses) {
       const skin = a?.attrs?.skinstatus;
-      if (!skin) return;
+      if (!skin) continue;
 
-      Object.entries(skin).forEach(([key, val]) => {
-        counts[key] = (counts[key] || 0) + Number(val ?? 0);
-      });
-    });
+      for (const [key, val] of Object.entries(skin)) {
+        counts[key] = (counts[key] ?? 0) + Number(val ?? 0);
+      }
+    }
 
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
-    const map: any = {
+    const map: Record<string, string> = {
       acne: "Акне",
       dark_circle: "Круги под глазами",
       stain: "Пигментация",
       health: "Общее здоровье кожи",
     };
 
-    return map[sorted[0][0]] || sorted[0][0];
+    const topKey = sorted[0][0];
+    return map[topKey] || topKey;
   })();
 
   /* ----------- Render ----------- */
@@ -94,13 +93,13 @@ export default function ClinicDashboard() {
             Панель управления клиники
           </h1>
 
-          {/* METRICS */}
+          {/* -------- METRICS -------- */}
           <div className="grid md:grid-cols-4 gap-6 mb-12">
             {[
               { label: "Пациентов", value: totalPatients },
               { label: "Анализов", value: totalAnalyses },
-              { label: "Средний возраст", value: totalAnalyses ? avgAge : "—" },
-              { label: "Beauty Score ~", value: totalAnalyses ? avgBeauty : "—" },
+              { label: "Средний возраст", value: totalAnalyses > 0 ? avgAge : "—" },
+              { label: "Beauty Score ~", value: totalAnalyses > 0 ? avgBeauty : "—" },
             ].map((m, i) => (
               <motion.div
                 key={i}
@@ -115,7 +114,7 @@ export default function ClinicDashboard() {
             ))}
           </div>
 
-          {/* TOP PROBLEM */}
+          {/* -------- TOP PROBLEM -------- */}
           <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-6 mb-12">
             <h3 className="text-xl font-semibold mb-3">
               Топ-проблема кожи среди пациентов
@@ -123,18 +122,19 @@ export default function ClinicDashboard() {
             <p className="text-white/60 text-lg">{topProblem}</p>
           </div>
 
-          {/* LAST ANALYSES */}
+          {/* -------- LAST ANALYSES -------- */}
           <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-6 mb-12">
             <h3 className="text-xl font-semibold mb-4">Последние анализы</h3>
 
-            {totalAnalyses === 0 ? (
+            {analyses.length === 0 ? (
               <p className="text-white/50 text-sm">Нет данных</p>
             ) : (
               <div className="space-y-4">
                 {analyses.slice(0, 5).map((a, i) => (
-                  <div
+                  <Link
+                    href={`/clinic/patients/${a.patient?.id}`}
                     key={i}
-                    className="border-b border-white/10 pb-3 flex items-center gap-4"
+                    className="border-b border-white/10 pb-3 flex items-center gap-4 hover:bg-white/[0.03] p-2 rounded-xl transition"
                   >
                     {a.photo && (
                       <img
@@ -151,13 +151,13 @@ export default function ClinicDashboard() {
                         {new Date(a.date).toLocaleString("ru-RU")}
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
           </div>
 
-          {/* CTA */}
+          {/* -------- CTA -------- */}
           <Link
             href="/clinic/patients/new"
             className="inline-block px-7 py-3 rounded-xl font-semibold text-[#111]"
