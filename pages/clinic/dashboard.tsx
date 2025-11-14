@@ -31,24 +31,26 @@ export default function ClinicDashboard() {
   const totalAnalyses = analyses.length;
 
   // Средний возраст
-  let avgAge = 0;
-  if (analyses.length > 0) {
-    const sumAge = analyses.reduce(
-      (acc, a) => acc + Number(a?.attrs?.age?.value ?? 0),
-      0
-    );
-    avgAge = Math.round(sumAge / analyses.length);
-  }
+  const avgAge =
+    totalAnalyses > 0
+      ? Math.round(
+          analyses.reduce(
+            (acc, a) => acc + Number(a?.attrs?.age?.value ?? 0),
+            0
+          ) / totalAnalyses
+        )
+      : 0;
 
-  // Средний beauty
-  let avgBeauty: string | number = 0;
-  if (analyses.length > 0) {
-    const sumBeauty = analyses.reduce(
-      (acc, a) => acc + Number(a?.attrs?.beauty?.female_score ?? 0),
-      0
-    );
-    avgBeauty = (sumBeauty / analyses.length).toFixed(1);
-  }
+  // Средний beauty (female)
+  const avgBeauty =
+    totalAnalyses > 0
+      ? (
+          analyses.reduce(
+            (acc, a) => acc + Number(a?.attrs?.beauty?.female_score ?? 0),
+            0
+          ) / totalAnalyses
+        ).toFixed(1)
+      : "—";
 
   /* --- Top skin problems --- */
   const topProblem = (() => {
@@ -65,7 +67,10 @@ export default function ClinicDashboard() {
       }
     }
 
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const entries = Object.entries(counts);
+    if (!entries.length) return "Нет данных";
+
+    const sorted = entries.sort((a, b) => b[1] - a[1]);
 
     const map: Record<string, string> = {
       acne: "Акне",
@@ -89,17 +94,32 @@ export default function ClinicDashboard() {
 
       <main className="bg-[#111111] text-white min-h-screen py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-10">
-            Панель управления клиники
-          </h1>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold">
+              Панель управления клиники
+            </h1>
+
+            <Link
+              href="/clinic/patients"
+              className="px-6 py-3 rounded-xl border border-white/10 text-white/80 hover:bg-white/[0.05] transition text-sm"
+            >
+              Все пациенты →
+            </Link>
+          </div>
 
           {/* -------- METRICS -------- */}
           <div className="grid md:grid-cols-4 gap-6 mb-12">
             {[
               { label: "Пациентов", value: totalPatients },
               { label: "Анализов", value: totalAnalyses },
-              { label: "Средний возраст", value: totalAnalyses > 0 ? avgAge : "—" },
-              { label: "Beauty Score ~", value: totalAnalyses > 0 ? avgBeauty : "—" },
+              {
+                label: "Средний возраст",
+                value: totalAnalyses > 0 ? avgAge : "—",
+              },
+              {
+                label: "Beauty Score ~",
+                value: totalAnalyses > 0 ? avgBeauty : "—",
+              },
             ].map((m, i) => (
               <motion.div
                 key={i}
@@ -124,7 +144,9 @@ export default function ClinicDashboard() {
 
           {/* -------- LAST ANALYSES -------- */}
           <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-6 mb-12">
-            <h3 className="text-xl font-semibold mb-4">Последние анализы</h3>
+            <h3 className="text-xl font-semibold mb-4">
+              Последние анализы
+            </h3>
 
             {analyses.length === 0 ? (
               <p className="text-white/50 text-sm">Нет данных</p>
@@ -162,7 +184,8 @@ export default function ClinicDashboard() {
             href="/clinic/patients/new"
             className="inline-block px-7 py-3 rounded-xl font-semibold text-[#111]"
             style={{
-              background: "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
+              background:
+                "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
             }}
           >
             + Добавить пациента

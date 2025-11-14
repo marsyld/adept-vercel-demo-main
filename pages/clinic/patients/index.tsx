@@ -10,7 +10,6 @@ export default function PatientsList() {
   const [search, setSearch] = useState("");
   const [patients, setPatients] = useState<any[]>([]);
 
-  /* ---- Load patients from storage ---- */
   useEffect(() => {
     const saved = localStorage.getItem("ADEPT_PATIENTS");
     if (saved) {
@@ -19,7 +18,7 @@ export default function PatientsList() {
   }, []);
 
   const filtered = patients.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()),
+    p.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -28,6 +27,15 @@ export default function PatientsList() {
 
       <main className="bg-[#111111] min-h-screen text-white py-20 px-6">
         <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <Link
+              href="/clinic/dashboard"
+              className="text-white/70 hover:text-white text-sm"
+            >
+              ← Панель управления
+            </Link>
+          </div>
+
           {/* Заголовок */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h1 className="text-3xl md:text-4xl font-bold">Пациенты</h1>
@@ -36,7 +44,8 @@ export default function PatientsList() {
               href="/clinic/patients/new"
               className="px-6 py-3 rounded-xl text-[#111] font-semibold"
               style={{
-                background: "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
+                background:
+                  "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
               }}
             >
               + Добавить пациента
@@ -64,7 +73,7 @@ export default function PatientsList() {
               <Link
                 key={p.id}
                 href={`/clinic/patients/${p.id}`}
-                className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.06] border border-white/10 hover:bg:white/[0.1] transition"
               >
                 <img
                   src={p.photo || "/placeholder-face.jpg"}
