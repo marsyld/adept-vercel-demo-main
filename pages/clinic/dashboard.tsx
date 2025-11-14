@@ -7,13 +7,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { initSeedPatients } from "@/utils/initSeedPatients";
 
 export default function ClinicDashboard() {
   const [patients, setPatients] = useState<any[]>([]);
   const [analyses, setAnalyses] = useState<any[]>([]);
 
-  /* ----------- Load data ----------- */
+  /* ----------- Load + Seed Patients ----------- */
   useEffect(() => {
+    initSeedPatients(); // ← подгрузит seed, если нет данных
+
     const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
     setPatients(list);
 
@@ -24,61 +27,56 @@ export default function ClinicDashboard() {
   }, []);
 
   /* ----------- Calculations ----------- */
-  const totalPatients: number = patients.length;
-  const totalAnalyses: number = analyses.length;
+  const totalPatients = patients.length;
+  const totalAnalyses = analyses.length;
 
   // Средний возраст
-  let avgAge: number = 0;
-  if (analyses.length > 0) {
-    let sumAge = 0;
-    for (const a of analyses) {
-      const age = Number(a?.attrs?.age?.value ?? 0);
-      sumAge += age;
-    }
-    avgAge = Math.round(sumAge / analyses.length);
-  }
+  const avgAge =
+    totalAnalyses > 0
+      ? Math.round(
+          analyses.reduce(
+            (acc, a) => acc + Number(a?.attrs?.age?.value ?? 0),
+            0
+          ) / totalAnalyses
+        )
+      : 0;
 
   // Средний beauty score (female)
-  let avgBeauty: string | number = 0;
-  if (analyses.length > 0) {
-    let sumBeauty = 0;
-    for (const a of analyses) {
-      const score = Number(a?.attrs?.beauty?.female_score ?? 0);
-      sumBeauty += score;
-    }
-    avgBeauty = (sumBeauty / analyses.length).toFixed(1);
-  }
+  const avgBeauty =
+    totalAnalyses > 0
+      ? (
+          analyses.reduce(
+            (acc, a) => acc + Number(a?.attrs?.beauty?.female_score ?? 0),
+            0
+          ) / totalAnalyses
+        ).toFixed(1)
+      : "—";
 
-  /* --- Top skin problems --- */
-  const topProblem: string = (() => {
-    if (!analyses.length) return "Нет данных";
+  /* --- Top skin problem --- */
+  const topProblem = (() => {
+    if (!totalAnalyses) return "Нет данных";
 
     const counts: Record<string, number> = {};
 
-    for (const a of analyses) {
+    analyses.forEach((a) => {
       const skin = a?.attrs?.skinstatus;
-      if (!skin) continue;
+      if (!skin) return;
 
       Object.entries(skin).forEach(([key, val]) => {
-        const numeric = Number(val ?? 0);
-        counts[key] = (counts[key] ?? 0) + numeric;
+        counts[key] = (counts[key] || 0) + Number(val ?? 0);
       });
-    }
+    });
 
-    const entries = Object.entries(counts);
-    if (!entries.length) return "Нет данных";
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
-    const sorted = entries.sort((a, b) => b[1] - a[1]);
-
-    const map: Record<string, string> = {
+    const map: any = {
       acne: "Акне",
       dark_circle: "Круги под глазами",
       stain: "Пигментация",
       health: "Общее здоровье кожи",
     };
 
-    const topKey = sorted[0][0];
-    return map[topKey] || topKey;
+    return map[sorted[0][0]] || sorted[0][0];
   })();
 
   /* ----------- Render ----------- */
@@ -96,13 +94,13 @@ export default function ClinicDashboard() {
             Панель управления клиники
           </h1>
 
-          {/* -------- METRICS -------- */}
+          {/* METRICS */}
           <div className="grid md:grid-cols-4 gap-6 mb-12">
             {[
               { label: "Пациентов", value: totalPatients },
               { label: "Анализов", value: totalAnalyses },
-              { label: "Средний возраст", value: totalAnalyses > 0 ? avgAge : "—" },
-              { label: "Beauty Score ~", value: totalAnalyses > 0 ? avgBeauty : "—" },
+              { label: "Средний возраст", value: totalAnalyses ? avgAge : "—" },
+              { label: "Beauty Score ~", value: totalAnalyses ? avgBeauty : "—" },
             ].map((m, i) => (
               <motion.div
                 key={i}
@@ -117,7 +115,7 @@ export default function ClinicDashboard() {
             ))}
           </div>
 
-          {/* -------- TOP PROBLEM -------- */}
+          {/* TOP PROBLEM */}
           <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-6 mb-12">
             <h3 className="text-xl font-semibold mb-3">
               Топ-проблема кожи среди пациентов
@@ -125,13 +123,11 @@ export default function ClinicDashboard() {
             <p className="text-white/60 text-lg">{topProblem}</p>
           </div>
 
-          {/* -------- LAST ANALYSES -------- */}
+          {/* LAST ANALYSES */}
           <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-6 mb-12">
-            <h3 className="text-xl font-semibold mb-4">
-              Последние анализы
-            </h3>
+            <h3 className="text-xl font-semibold mb-4">Последние анализы</h3>
 
-            {analyses.length === 0 ? (
+            {totalAnalyses === 0 ? (
               <p className="text-white/50 text-sm">Нет данных</p>
             ) : (
               <div className="space-y-4">
@@ -161,7 +157,7 @@ export default function ClinicDashboard() {
             )}
           </div>
 
-          {/* -------- CTA -------- */}
+          {/* CTA */}
           <Link
             href="/clinic/patients/new"
             className="inline-block px-7 py-3 rounded-xl font-semibold text-[#111]"
