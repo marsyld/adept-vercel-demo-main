@@ -1,35 +1,22 @@
 // pages/clinic/patients/index.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export default function PatientsList() {
   const [search, setSearch] = useState("");
+  const [patients, setPatients] = useState<any[]>([]);
 
-  // Пока мок-данные. Потом заменим на реальную БД.
-  const patients = [
-    {
-      id: "1",
-      name: "Анна Петрова",
-      gender: "female",
-      age: 28,
-      photo: "/placeholder-face.jpg",
-      analyses: 4,
-      lastAnalysis: "2025-11-15",
-    },
-    {
-      id: "2",
-      name: "Никита Смирнов",
-      gender: "male",
-      age: 33,
-      photo: "/placeholder-face.jpg",
-      analyses: 1,
-      lastAnalysis: "2025-11-10",
-    },
-  ];
+  /* ---- Load patients from storage ---- */
+  useEffect(() => {
+    const saved = localStorage.getItem("ADEPT_PATIENTS");
+    if (saved) {
+      setPatients(JSON.parse(saved));
+    }
+  }, []);
 
   const filtered = patients.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()),
@@ -47,7 +34,7 @@ export default function PatientsList() {
 
             <Link
               href="/clinic/patients/new"
-              className="px-6 py-3 rounded-xl text-[#111111] font-semibold"
+              className="px-6 py-3 rounded-xl text-[#111] font-semibold"
               style={{
                 background: "linear-gradient(135deg, #E1EEC3 0%, #E1EEC3 100%)",
               }}
@@ -80,7 +67,7 @@ export default function PatientsList() {
                 className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition"
               >
                 <img
-                  src={p.photo}
+                  src={p.photo || "/placeholder-face.jpg"}
                   alt={p.name}
                   className="w-16 h-16 object-cover rounded-xl bg-white/10"
                 />
@@ -89,12 +76,11 @@ export default function PatientsList() {
                   <h3 className="text-lg font-semibold">{p.name}</h3>
 
                   <p className="text-white/50 text-sm">
-                    {p.gender === "female" ? "Жен." : "Муж."},{" "}
-                    {p.age ? `${p.age} лет` : "—"}
+                    {p.age ? `${p.age} лет` : "Возраст не указан"}
                   </p>
 
                   <p className="text-white/50 text-sm mt-1">
-                    Анализов: <b>{p.analyses}</b> · Последний: {p.lastAnalysis}
+                    Анализов: <b>{p.analyses?.length || 0}</b>
                   </p>
                 </div>
 
