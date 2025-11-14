@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { motion } from "framer-motion";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 
 export default function UploadAnalysisPage() {
@@ -15,11 +15,13 @@ export default function UploadAnalysisPage() {
 
   const [patient, setPatient] = useState<any>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [previewBase64, setPreviewBase64] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [base64img, setBase64img] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* -------- Загрузка пациента -------- */
+  /* ---- LOAD PATIENT ---- */
   useEffect(() => {
     if (!id) return;
     const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
@@ -27,16 +29,16 @@ export default function UploadAnalysisPage() {
     setPatient(found || null);
   }, [id]);
 
-  /* --- Конвертация в Base64 с полным префиксом --- */
-  const fileToBase64WithPrefix = (f: File): Promise<string> =>
+  /* ---- Convert to Base64 ---- */
+  const toBase64 = (f: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const r = new FileReader();
-      r.onload = () => resolve(r.result as string); // уже содержит data:image/jpeg;base64
-      r.onerror = reject;
       r.readAsDataURL(f);
+      r.onload = () => resolve(r.result as string); // FULL base64 including prefix
+      r.onerror = reject;
     });
 
-  /* ----------- Отправка в API и сохранение ----------- */
+  /* ---- Upload & Analyze ---- */
   const startAnalyze = async () => {
     if (!file || !id) return;
 
@@ -44,9 +46,8 @@ export default function UploadAnalysisPage() {
       setLoading(true);
       setError(null);
 
-      // Base64 полный (с префиксом)
-      const fullBase64 = await fileToBase64WithPrefix(file);
-      const pureBase64 = fullBase64.split(",")[1]; // API принимает без префикса
+      const fullBase64 = await toBase64(file); // includes "data:image/jpeg;base64,..."
+      const pureBase64 = fullBase64.split(",")[1];
 
       const res = await fetch("/api/analyze-face", {
         method: "POST",
@@ -59,22 +60,19 @@ export default function UploadAnalysisPage() {
       const data = await res.json();
       const face = data?.faces?.[0];
 
-      /* ---------- обновляем пациента ---------- */
+      /* ---- UPDATE LOCALSTORAGE ---- */
       const list = JSON.parse(localStorage.getItem("ADEPT_PATIENTS") || "[]");
 
       const updated = list.map((p: any) =>
         p.id === id
           ? {
               ...p,
-
-              // Сохраняем фиксированное фото
-              lastPhoto: fullBase64,
-
+              lastPhoto: fullBase64, // storing stable base64
               analyses: [
                 {
                   date: Date.now(),
                   attrs: face?.attributes || null,
-                  photo: fullBase64,
+                  photo: fullBase64, // storing stable base64
                 },
                 ...(p.analyses || []),
               ],
@@ -86,7 +84,7 @@ export default function UploadAnalysisPage() {
 
       router.push(`/clinic/patients/${id}`);
     } catch (e: any) {
-      setError(e?.message || "Ошибка анализа");
+      setError(e.message || "Ошибка анализа");
     } finally {
       setLoading(false);
     }
@@ -115,30 +113,29 @@ export default function UploadAnalysisPage() {
           </h1>
 
           <p className="text-white/60 mb-10">
-            Пациент: <span className="text-brand-secondary">{patient.name}</span>
+            Пациент:{" "}
+            <span className="text-brand-secondary">{patient.name}</span>
           </p>
 
-          {/* Upload */}
+          {/* UPLOAD */}
           <motion.div
             className="border-2 border-dashed border-white/20 rounded-2xl p-8 mb-6 cursor-pointer hover:border-brand-secondary hover:bg-white/[0.04] transition"
             onClick={() => document.getElementById("filePatient")?.click()}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={async (e) => {
+            onDrop={(e) => {
               e.preventDefault();
               const f = e.dataTransfer.files?.[0];
               if (!f) return;
-
               setFile(f);
-              const base64 = await fileToBase64WithPrefix(f);
-              setPreviewBase64(base64);
+              setPreview(URL.createObjectURL(f));
             }}
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {previewBase64 ? (
+            {preview ? (
               <img
-                src={previewBase64}
+                src={preview}
                 className="mx-auto rounded-xl max-h-80 object-contain shadow-lg"
               />
             ) : (
@@ -159,12 +156,12 @@ export default function UploadAnalysisPage() {
                 const f = e.target.files?.[0];
                 if (!f) return;
                 setFile(f);
-                const base64 = await fileToBase64WithPrefix(f);
-                setPreviewBase64(base64);
+                setPreview(URL.createObjectURL(f));
               }}
             />
           </motion.div>
 
+          {/* ACTIONS */}
           <div className="flex gap-4 justify-center">
             <button
               onClick={startAnalyze}
